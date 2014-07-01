@@ -28,9 +28,17 @@ type User struct {
 	CreatedAt                    time.Time `json:"created-at"`
 }
 
-func (h *HarvestClient) All(updatedSince time.Time) ([]*User, error) {
-	values := url.Values{"updated-since": {updatedSince.UTC().String()}}
-	response, err := h.client.Get("/people" + values.Encode())
+func (h *HarvestClient) All() ([]*User, error) {
+	return h.AllUpdatedSince(time.Time{})
+}
+
+func (h *HarvestClient) AllUpdatedSince(updatedSince time.Time) ([]*User, error) {
+	peopleUrl := "people"
+	if !updatedSince.IsZero() {
+		values := url.Values{"updated-since": {updatedSince.UTC().String()}}
+		peopleUrl = peopleUrl + values.Encode()
+	}
+	response, err := h.client.Get(peopleUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -41,4 +49,18 @@ func (h *HarvestClient) All(updatedSince time.Time) ([]*User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func (h *HarvestClient) Find(id int) (*User, error) {
+	response, err := h.client.Get("/people/" + string(id))
+	if err != nil {
+		return nil, err
+	}
+	user := User{}
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
