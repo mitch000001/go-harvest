@@ -3,13 +3,45 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
+const basePath = "https://api.harvestapp.com/"
+
+func New(client *http.Client) (*HarvestClient, error) {
+	if client == nil {
+		return nil, errors.New("client is nil")
+	}
+	h := &HarvestClient{client: client, BasePath: basePath}
+	h.Users = NewUsersService(h)
+	return h, nil
+}
+
 type HarvestClient struct {
-	client *http.Client
+	client   *http.Client
+	BasePath string // API endpoint base URL
+	Users    *UsersService
+}
+
+func (h *HarvestClient) AbsoluteUrl(relativeRequestUrl string) string {
+	if strings.HasSuffix(h.BasePath, "/") {
+		return h.BasePath[:len(h.BasePath)-1] + relativeRequestUrl
+	} else {
+		return h.BasePath + relativeRequestUrl
+	}
+}
+
+type UsersService struct {
+	h *HarvestClient
+}
+
+func NewUsersService(client *HarvestClient) *UsersService {
+	return &UsersService{h: client}
 }
 
 type User struct {
@@ -29,17 +61,18 @@ type User struct {
 	CreatedAt                    time.Time `json:"created-at"`
 }
 
-func (h *HarvestClient) All() ([]*User, error) {
-	return h.AllUpdatedSince(time.Time{})
+func (s *UsersService) All() ([]*User, error) {
+	return s.AllUpdatedSince(time.Time{})
 }
 
-func (h *HarvestClient) AllUpdatedSince(updatedSince time.Time) ([]*User, error) {
-	peopleUrl := "people"
+func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) {
+	peopleUrl := "/people"
 	if !updatedSince.IsZero() {
 		values := url.Values{"updated-since": {updatedSince.UTC().String()}}
-		peopleUrl = peopleUrl + values.Encode()
+		peopleUrl = peopleUrl + "?" + values.Encode()
 	}
-	response, err := h.client.Get(peopleUrl)
+	urls := s.h.AbsoluteUrl(peopleUrl)
+	response, err := s.h.client.Get(urls)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +85,9 @@ func (h *HarvestClient) AllUpdatedSince(updatedSince time.Time) ([]*User, error)
 	return users, nil
 }
 
-func (h *HarvestClient) Find(id int) (*User, error) {
-	response, err := h.client.Get("/people/" + string(id))
+func (s *UsersService) Find(id int) (*User, error) {
+	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d", id))
+	response, err := s.h.client.Get(urls)
 	if err != nil {
 		return nil, err
 	}
@@ -66,12 +100,13 @@ func (h *HarvestClient) Find(id int) (*User, error) {
 	return &user, nil
 }
 
-func (h *HarvestClient) Create(user *User) (*User, error) {
+func (s *UsersService) Create(user *User) (*User, error) {
 	marshaledUser, err := json.Marshal(user)
 	if err != nil {
 		return nil, err
 	}
-	response, err := h.client.Post("/people", "application/json", bytes.NewBuffer(marshaledUser))
+	urls := s.h.AbsoluteUrl("/people")
+	response, err := s.h.client.Post(urls, "application/json", bytes.NewBuffer(marshaledUser))
 	if err != nil {
 		return nil, err
 	}
@@ -83,29 +118,31 @@ func (h *HarvestClient) Create(user *User) (*User, error) {
 	return user, nil
 }
 
-func (h *HarvestClient) ResetPassword(user *User) error {
+func (s *UsersService) ResetPassword(user *User) error {
 	marshaledUser, err := json.Marshal(user)
 	if err != nil {
 		return err
 	}
-	_, err = h.client.Post("/people/"+string(user.Id)+"/reset_password", "application/json", bytes.NewBuffer(marshaledUser))
+	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d/reset_password", user.Id))
+	_, err = s.h.client.Post(urls, "application/json", bytes.NewBuffer(marshaledUser))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (h *HarvestClient) Update(user *User) (*User, error) {
+func (s *UsersService) Update(user *User) (*User, error) {
 	marshaledUser, err := json.Marshal(user)
 	if err != nil {
 		return nil, err
 	}
-	request, err := http.NewRequest("PUT", "/people/"+string(user.Id), bytes.NewBuffer(marshaledUser))
+	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d", user.Id))
+	request, err := http.NewRequest("PUT", urls, bytes.NewBuffer(marshaledUser))
 	if err != nil {
 		return nil, err
 	}
-	request.Header = http.Header{"Content-Type": {"application/json"}}
-	response, err := h.client.Do(request)
+	request.Header.Set("Content-Type", "application/json")
+	response, err := s.h.client.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -117,12 +154,13 @@ func (h *HarvestClient) Update(user *User) (*User, error) {
 	return user, nil
 }
 
-func (h *HarvestClient) Delete(user *User) (bool, error) {
-	request, err := http.NewRequest("DELETE", "/people/"+string(user.Id), nil)
+func (s *UsersService) Delete(user *User) (bool, error) {
+	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d", user.Id))
+	request, err := http.NewRequest("DELETE", urls, nil)
 	if err != nil {
 		return false, err
 	}
-	response, err := h.client.Do(request)
+	response, err := s.h.client.Do(request)
 	if err != nil {
 		return false, err
 	}
@@ -135,12 +173,13 @@ func (h *HarvestClient) Delete(user *User) (bool, error) {
 	}
 }
 
-func (h *HarvestClient) Toggle(user *User) (bool, error) {
-	request, err := http.NewRequest("DELETE", "/people/"+string(user.Id), nil)
+func (s *UsersService) Toggle(user *User) (bool, error) {
+	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d", user.Id))
+	request, err := http.NewRequest("POST", urls, nil)
 	if err != nil {
 		return false, err
 	}
-	response, err := h.client.Do(request)
+	response, err := s.h.client.Do(request)
 	if err != nil {
 		return false, err
 	}
