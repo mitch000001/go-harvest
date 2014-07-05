@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -22,12 +23,22 @@ func parseSubdomain(subdomain string) (*url.URL, error) {
 	return url.Parse(subdomain)
 }
 
+func main() {
+	uriBase, _ := parseSubdomain("foo")
+	uri, err := uriBase.Parse("/people")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Base: %s\n", uriBase)
+	fmt.Printf("Parsed: %s\n", uri)
+}
+
 func New(subdomain string) (*HarvestClient, error) {
 	baseUrl, err := parseSubdomain(subdomain)
 	if err != nil {
 		return nil, err
 	}
-	h := &HarvestClient{client: &http.Client{}, BasePath: baseUrl.String()}
+	h := &HarvestClient{client: &http.Client{}, BaseUrl: baseUrl}
 	h.Users = NewUsersService(h)
 	return h, nil
 }
@@ -49,16 +60,24 @@ func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*HarvestClie
 type HarvestClient struct {
 	client          *http.Client
 	basicAuthConfig *BasicAuthConfig
-	BasePath        string // API endpoint base URL
+	BaseUrl         *url.URL // API endpoint base URL
 	Users           *UsersService
 }
 
-func (h *HarvestClient) AbsoluteUrl(relativeRequestUrl string) string {
-	if strings.HasSuffix(h.BasePath, "/") {
-		return h.BasePath[:len(h.BasePath)-1] + relativeRequestUrl
-	} else {
-		return h.BasePath + relativeRequestUrl
+func (h *HarvestClient) CreateRequest(method string, relativeUrl string, body io.Reader) (*http.Request, error) {
+	requestUrl, err := h.BaseUrl.Parse(relativeUrl)
+	if err != nil {
+		return nil, err
 	}
+	request, err := http.NewRequest(method, requestUrl.String(), body)
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	if h.basicAuthConfig != nil {
+		request.SetBasicAuth(h.basicAuthConfig.Username, h.basicAuthConfig.Password)
+	}
+	return request, nil
 }
 
 type UsersService struct {
@@ -96,8 +115,11 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 		values := url.Values{"updated-since": {updatedSince.UTC().String()}}
 		peopleUrl = peopleUrl + "?" + values.Encode()
 	}
-	urls := s.h.AbsoluteUrl(peopleUrl)
-	response, err := s.h.client.Get(urls)
+	request, err := s.h.CreateRequest("GET", peopleUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+	response, err := s.h.client.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -111,8 +133,11 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 }
 
 func (s *UsersService) Find(id int) (*User, error) {
-	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d", id))
-	response, err := s.h.client.Get(urls)
+	request, err := s.h.CreateRequest("GET", fmt.Sprintf("/people/%d", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	response, err := s.h.client.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +155,11 @@ func (s *UsersService) Create(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	urls := s.h.AbsoluteUrl("/people")
-	response, err := s.h.client.Post(urls, "application/json", bytes.NewBuffer(marshaledUser))
+	request, err := s.h.CreateRequest("POST", "/people", bytes.NewBuffer(marshaledUser))
+	if err != nil {
+		return nil, err
+	}
+	response, err := s.h.client.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -148,8 +176,11 @@ func (s *UsersService) ResetPassword(user *User) error {
 	if err != nil {
 		return err
 	}
-	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d/reset_password", user.Id))
-	_, err = s.h.client.Post(urls, "application/json", bytes.NewBuffer(marshaledUser))
+	request, err := s.h.CreateRequest("POST", fmt.Sprintf("/people/%d/reset_password", user.Id), bytes.NewBuffer(marshaledUser))
+	if err != nil {
+		return err
+	}
+	_, err = s.h.client.Do(request)
 	if err != nil {
 		return err
 	}
@@ -161,8 +192,7 @@ func (s *UsersService) Update(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d", user.Id))
-	request, err := http.NewRequest("PUT", urls, bytes.NewBuffer(marshaledUser))
+	request, err := s.h.CreateRequest("PUT", fmt.Sprintf("/people/%d", user.Id), bytes.NewBuffer(marshaledUser))
 	if err != nil {
 		return nil, err
 	}
@@ -180,8 +210,7 @@ func (s *UsersService) Update(user *User) (*User, error) {
 }
 
 func (s *UsersService) Delete(user *User) (bool, error) {
-	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d", user.Id))
-	request, err := http.NewRequest("DELETE", urls, nil)
+	request, err := s.h.CreateRequest("DELETE", fmt.Sprintf("/people/%d", user.Id), nil)
 	if err != nil {
 		return false, err
 	}
@@ -199,8 +228,7 @@ func (s *UsersService) Delete(user *User) (bool, error) {
 }
 
 func (s *UsersService) Toggle(user *User) (bool, error) {
-	urls := s.h.AbsoluteUrl(fmt.Sprintf("/people/%d", user.Id))
-	request, err := http.NewRequest("POST", urls, nil)
+	request, err := s.h.CreateRequest("POST", fmt.Sprintf("/people/%d", user.Id), nil)
 	if err != nil {
 		return false, err
 	}
