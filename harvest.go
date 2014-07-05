@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,21 +10,44 @@ import (
 	"time"
 )
 
-const basePath = "https://api.harvestapp.com/"
+const basePathTemplate = "https://%s.harvestapp.com/"
 
-func New(client *http.Client) (*HarvestClient, error) {
-	if client == nil {
-		return nil, errors.New("client is nil")
+func parseSubdomain(subdomain string) (*url.URL, error) {
+	if len(strings.Split(subdomain, ".")) == 1 {
+		return url.Parse(fmt.Sprintf(basePathTemplate, subdomain))
 	}
-	h := &HarvestClient{client: client, BasePath: basePath}
+	return url.Parse(subdomain)
+}
+
+func New(subdomain string) (*HarvestClient, error) {
+	baseUrl, err := parseSubdomain(subdomain)
+	if err != nil {
+		return nil, err
+	}
+	h := &HarvestClient{client: &http.Client{}, BasePath: baseUrl.String()}
 	h.Users = NewUsersService(h)
 	return h, nil
 }
 
+type BasicAuthConfig struct {
+	Username string
+	Password string
+}
+
+func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*HarvestClient, error) {
+	h, err := New(subdomain)
+	if err != nil {
+		return nil, err
+	}
+	h.basicAuthConfig = config
+	return h, nil
+}
+
 type HarvestClient struct {
-	client   *http.Client
-	BasePath string // API endpoint base URL
-	Users    *UsersService
+	client          *http.Client
+	basicAuthConfig *BasicAuthConfig
+	BasePath        string // API endpoint base URL
+	Users           *UsersService
 }
 
 func (h *HarvestClient) AbsoluteUrl(relativeRequestUrl string) string {
