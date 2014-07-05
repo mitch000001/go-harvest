@@ -16,6 +16,9 @@ func parseSubdomain(subdomain string) (*url.URL, error) {
 	if len(strings.Split(subdomain, ".")) == 1 {
 		return url.Parse(fmt.Sprintf(basePathTemplate, subdomain))
 	}
+	if !strings.HasSuffix(subdomain, "/") {
+		subdomain = subdomain + "/"
+	}
 	return url.Parse(subdomain)
 }
 
