@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -33,12 +34,16 @@ func main() {
 	fmt.Printf("Parsed: %s\n", uri)
 }
 
+type AuthenticationTransport interface {
+	Client() *http.Client
+}
+
 func New(subdomain string) (*HarvestClient, error) {
 	baseUrl, err := parseSubdomain(subdomain)
 	if err != nil {
 		return nil, err
 	}
-	h := &HarvestClient{client: &http.Client{}, BaseUrl: baseUrl}
+	h := &HarvestClient{BaseUrl: baseUrl}
 	h.Users = NewUsersService(h)
 	return h, nil
 }
@@ -49,19 +54,29 @@ type BasicAuthConfig struct {
 }
 
 func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*HarvestClient, error) {
+	transport := &Transport{Config: config}
 	h, err := New(subdomain)
 	if err != nil {
 		return nil, err
 	}
-	h.basicAuthConfig = config
+	h.AuthenticationTransport = transport
 	return h, nil
 }
 
+func NewOAuthClient(subdomain string, config *oauth.Config) (*HarvestClient, error) {
+	transport := &oauth.Transport{Config: config}
+	h, err := New(subdomain)
+	if err != nil {
+		return nil, err
+	}
+	h.AuthenticationTransport = transport
+	return h, err
+}
+
 type HarvestClient struct {
-	client          *http.Client
-	basicAuthConfig *BasicAuthConfig
-	BaseUrl         *url.URL // API endpoint base URL
-	Users           *UsersService
+	AuthenticationTransport
+	BaseUrl *url.URL // API endpoint base URL
+	Users   *UsersService
 }
 
 func (h *HarvestClient) CreateRequest(method string, relativeUrl string, body io.Reader) (*http.Request, error) {
@@ -74,9 +89,7 @@ func (h *HarvestClient) CreateRequest(method string, relativeUrl string, body io
 		return nil, err
 	}
 	request.Header.Set("Content-Type", "application/json")
-	if h.basicAuthConfig != nil {
-		request.SetBasicAuth(h.basicAuthConfig.Username, h.basicAuthConfig.Password)
-	}
+	request.Header.Set("Accept", "application/json")
 	return request, nil
 }
 
@@ -119,7 +132,7 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 	if err != nil {
 		return nil, err
 	}
-	response, err := s.h.client.Do(request)
+	response, err := s.h.Client().Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +150,7 @@ func (s *UsersService) Find(id int) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := s.h.client.Do(request)
+	response, err := s.h.Client().Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +172,7 @@ func (s *UsersService) Create(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := s.h.client.Do(request)
+	response, err := s.h.Client().Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +193,7 @@ func (s *UsersService) ResetPassword(user *User) error {
 	if err != nil {
 		return err
 	}
-	_, err = s.h.client.Do(request)
+	_, err = s.h.Client().Do(request)
 	if err != nil {
 		return err
 	}
@@ -197,7 +210,7 @@ func (s *UsersService) Update(user *User) (*User, error) {
 		return nil, err
 	}
 	request.Header.Set("Content-Type", "application/json")
-	response, err := s.h.client.Do(request)
+	response, err := s.h.Client().Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +227,7 @@ func (s *UsersService) Delete(user *User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	response, err := s.h.client.Do(request)
+	response, err := s.h.Client().Do(request)
 	if err != nil {
 		return false, err
 	}
@@ -232,7 +245,7 @@ func (s *UsersService) Toggle(user *User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	response, err := s.h.client.Do(request)
+	response, err := s.h.Client().Do(request)
 	if err != nil {
 		return false, err
 	}
