@@ -34,53 +34,49 @@ func main() {
 	fmt.Printf("Parsed: %s\n", uri)
 }
 
-type AuthenticationTransport interface {
+type authenticationTransport interface {
 	Client() *http.Client
 }
 
-func New(subdomain string) (*HarvestClient, error) {
+// new creates a new Client for the provided subdomain
+func newClient(subdomain string) (*Client, error) {
 	baseUrl, err := parseSubdomain(subdomain)
 	if err != nil {
 		return nil, err
 	}
-	h := &HarvestClient{BaseUrl: baseUrl}
+	h := &Client{baseUrl: baseUrl}
 	h.Users = NewUsersService(h)
 	return h, nil
 }
 
-type BasicAuthConfig struct {
-	Username string
-	Password string
-}
-
-func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*HarvestClient, error) {
-	transport := &Transport{Config: config}
-	h, err := New(subdomain)
+// NewBasicAuthClient creates a new Client with BasicAuth as authentication method
+func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*Client, error) {
+	h, err := newClient(subdomain)
 	if err != nil {
 		return nil, err
 	}
-	h.AuthenticationTransport = transport
+	h.authenticationTransport = &Transport{Config: config}
 	return h, nil
 }
 
-func NewOAuthClient(subdomain string, config *oauth.Config) (*HarvestClient, error) {
-	transport := &oauth.Transport{Config: config}
-	h, err := New(subdomain)
+// NewOAuthClient creates a new Client with OAuth as authentication method
+func NewOAuthClient(subdomain string, config *oauth.Config) (*Client, error) {
+	h, err := newClient(subdomain)
 	if err != nil {
 		return nil, err
 	}
-	h.AuthenticationTransport = transport
+	h.authenticationTransport = &oauth.Transport{Config: config}
 	return h, err
 }
 
-type HarvestClient struct {
-	AuthenticationTransport
-	BaseUrl *url.URL // API endpoint base URL
+type Client struct {
+	authenticationTransport
+	baseUrl *url.URL // API endpoint base URL
 	Users   *UsersService
 }
 
-func (h *HarvestClient) CreateRequest(method string, relativeUrl string, body io.Reader) (*http.Request, error) {
-	requestUrl, err := h.BaseUrl.Parse(relativeUrl)
+func (h *Client) CreateRequest(method string, relativeUrl string, body io.Reader) (*http.Request, error) {
+	requestUrl, err := h.baseUrl.Parse(relativeUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -94,10 +90,10 @@ func (h *HarvestClient) CreateRequest(method string, relativeUrl string, body io
 }
 
 type UsersService struct {
-	h *HarvestClient
+	h *Client
 }
 
-func NewUsersService(client *HarvestClient) *UsersService {
+func NewUsersService(client *Client) *UsersService {
 	return &UsersService{h: client}
 }
 

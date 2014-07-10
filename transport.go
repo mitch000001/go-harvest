@@ -13,6 +13,12 @@ func (bae BasicAuthError) Error() string {
 	return "BasicAuthError: " + bae.prefix + ": " + bae.msg
 }
 
+// BasicAuthConfig is the configuration of a basic auth consumer
+type BasicAuthConfig struct {
+	Username string
+	Password string
+}
+
 // Transport implements http.RoundTripper. When configured with a valid
 // BasicAuthConfig it can be used to make authenticated HTTP requests.
 //
