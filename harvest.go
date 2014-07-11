@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"code.google.com/p/goauth2/oauth"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,6 +17,9 @@ import (
 const basePathTemplate = "https://%s.harvestapp.com/"
 
 func parseSubdomain(subdomain string) (*url.URL, error) {
+	if subdomain == "" {
+		return nil, errors.New("Subdomain can't be blank")
+	}
 	if len(strings.Split(subdomain, ".")) == 1 {
 		return url.Parse(fmt.Sprintf(basePathTemplate, subdomain))
 	}
@@ -38,7 +43,7 @@ type authenticationTransport interface {
 	Client() *http.Client
 }
 
-// new creates a new Client for the provided subdomain
+// newClient creates a new Client for the provided subdomain
 func newClient(subdomain string) (*Client, error) {
 	baseUrl, err := parseSubdomain(subdomain)
 	if err != nil {
@@ -89,6 +94,18 @@ func (h *Client) CreateRequest(method string, relativeUrl string, body io.Reader
 	return request, nil
 }
 
+type Response struct {
+	Message string `json:"message,omitempty"`
+}
+
+type ResponseError struct {
+	Response Response
+}
+
+func (r *ResponseError) Error() string {
+	return r.Response.Message
+}
+
 type UsersService struct {
 	h *Client
 }
@@ -100,18 +117,25 @@ func NewUsersService(client *Client) *UsersService {
 type User struct {
 	Id                           int       `json:"id"`
 	Email                        string    `json:"email"`
-	FirstName                    string    `json:"first-name"`
-	LastName                     string    `json:"last-name"`
-	HasAccessToAllFutureProjects bool      `json:"has-access-to-all-future-projects"`
-	DefaultHourlyRate            int       `json:"default-hourly-rate"`
-	IsActive                     bool      `json:"is-active"`
-	IsAdmin                      bool      `json:"is-admin"`
-	IsContractor                 bool      `json:"is-contractor"`
+	FirstName                    string    `json:"first_name"`
+	LastName                     string    `json:"last_name"`
+	HasAccessToAllFutureProjects bool      `json:"has_access_to_all_future_projects"`
+	DefaultHourlyRate            int       `json:"default_hourly_rate"`
+	IsActive                     bool      `json:"is_active"`
+	IsAdmin                      bool      `json:"is_admin"`
+	IsContractor                 bool      `json:"is_contractor"`
 	Telephone                    string    `json:"telephone"`
 	Department                   string    `json:"department"`
 	Timezone                     string    `json:"timezone"`
-	UpdatedAt                    time.Time `json:"updated-at"`
-	CreatedAt                    time.Time `json:"created-at"`
+	UpdatedAt                    time.Time `json:"updated_at"`
+	CreatedAt                    time.Time `json:"created_at"`
+}
+
+type UserRequest UserResponse
+
+type UserResponse struct {
+	Response
+	User *User `json:"user"`
 }
 
 func (s *UsersService) All() ([]*User, error) {
@@ -132,11 +156,18 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 	if err != nil {
 		return nil, err
 	}
-	users := make([]*User, 0)
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(users)
+	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
+	}
+	userResponses := make([]*UserResponse, 0)
+	err = json.Unmarshal(responseBytes, &userResponses)
+	if err != nil {
+		return nil, err
+	}
+	users := make([]*User, len(userResponses))
+	for i, u := range userResponses {
+		users[i] = u.User
 	}
 	return users, nil
 }
@@ -150,17 +181,23 @@ func (s *UsersService) Find(id int) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	user := User{}
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&user)
+	if response.StatusCode == 404 {
+		return nil, &ResponseError{Response{fmt.Sprintf("No user found with id %d", id)}}
+	}
+	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+	userResponse := UserResponse{}
+	err = json.Unmarshal(responseBytes, &userResponse)
+	if err != nil {
+		return nil, err
+	}
+	return userResponse.User, nil
 }
 
 func (s *UsersService) Create(user *User) (*User, error) {
-	marshaledUser, err := json.Marshal(user)
+	marshaledUser, err := json.Marshal(&UserRequest{User: user})
 	if err != nil {
 		return nil, err
 	}
@@ -172,11 +209,22 @@ func (s *UsersService) Create(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&user)
-	if err != nil {
-		return nil, err
+	location := response.Header.Get("Location")
+	userId := -1
+	fmt.Sscanf(location, "/people/%d", &userId)
+	if userId == -1 {
+		responseBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, err
+		}
+		apiResponse := Response{}
+		err = json.Unmarshal(responseBytes, &apiResponse)
+		if err != nil {
+			return nil, err
+		}
+		return nil, &ResponseError{apiResponse}
 	}
+	user.Id = userId
 	return user, nil
 }
 
@@ -197,7 +245,7 @@ func (s *UsersService) ResetPassword(user *User) error {
 }
 
 func (s *UsersService) Update(user *User) (*User, error) {
-	marshaledUser, err := json.Marshal(user)
+	marshaledUser, err := json.Marshal(&UserRequest{User: user})
 	if err != nil {
 		return nil, err
 	}
@@ -210,10 +258,17 @@ func (s *UsersService) Update(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&user)
-	if err != nil {
-		return nil, err
+	if response.StatusCode != 200 {
+		responseBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, err
+		}
+		apiResponse := Response{}
+		err = json.Unmarshal(responseBytes, &apiResponse)
+		if err != nil {
+			return nil, err
+		}
+		return nil, &ResponseError{apiResponse}
 	}
 	return user, nil
 }
