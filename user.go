@@ -48,7 +48,8 @@ func (s *UsersService) All() ([]*User, error) {
 func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) {
 	peopleUrl := "/people"
 	if !updatedSince.IsZero() {
-		values := url.Values{"updated-since": {updatedSince.UTC().String()}}
+		values := make(url.Values)
+		values.Add("updated_since", updatedSince.UTC().String())
 		peopleUrl = peopleUrl + "?" + values.Encode()
 	}
 	request, err := s.h.CreateRequest("GET", peopleUrl, nil)
@@ -85,7 +86,7 @@ func (s *UsersService) Find(id int) (*User, error) {
 		return nil, err
 	}
 	if response.StatusCode == 404 {
-		return nil, &ResponseError{Response{fmt.Sprintf("No user found with id %d", id)}}
+		return nil, &ResponseError{&Response{fmt.Sprintf("No user found with id %d", id)}}
 	}
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -104,7 +105,7 @@ func (s *UsersService) Create(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	request, err := s.h.CreateRequest("POST", "/people", bytes.NewBuffer(marshaledUser))
+	request, err := s.h.CreateRequest("POST", "/people", bytes.NewReader(marshaledUser))
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +126,7 @@ func (s *UsersService) Create(user *User) (*User, error) {
 		if err != nil {
 			return nil, err
 		}
-		return nil, &ResponseError{apiResponse}
+		return nil, &ResponseError{&apiResponse}
 	}
 	user.Id = userId
 	return user, nil
@@ -171,7 +172,7 @@ func (s *UsersService) Update(user *User) (*User, error) {
 		if err != nil {
 			return nil, err
 		}
-		return nil, &ResponseError{apiResponse}
+		return nil, &ResponseError{&apiResponse}
 	}
 	return user, nil
 }

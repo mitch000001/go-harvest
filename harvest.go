@@ -118,7 +118,7 @@ type Response struct {
 }
 
 type ResponseError struct {
-	Response Response
+	Response *Response
 }
 
 func (r *ResponseError) Error() string {
