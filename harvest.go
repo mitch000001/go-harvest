@@ -49,6 +49,7 @@ func newClient(subdomain string) (*Client, error) {
 	}
 	h := &Client{baseUrl: baseUrl}
 	h.Users = NewUsersService(h)
+	h.Projects = NewProjectsService(h)
 	return h, nil
 }
 
@@ -74,8 +75,9 @@ func NewOAuthClient(subdomain string, config *oauth.Config) (*Client, error) {
 
 type Client struct {
 	authenticationTransport
-	baseUrl *url.URL // API endpoint base URL
-	Users   *UsersService
+	baseUrl  *url.URL // API endpoint base URL
+	Users    *UsersService
+	Projects *ProjectsService
 }
 
 func (h *Client) CreateRequest(method string, relativeUrl string, body io.Reader) (*http.Request, error) {
