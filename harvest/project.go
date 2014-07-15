@@ -165,7 +165,7 @@ func (p *ProjectsService) Create(project *Project) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	request, err := p.h.CreateRequest("POST", "/projects.json", bytes.NewReader(marshaledProject))
+	request, err := p.h.CreateRequest("POST", "/projects", bytes.NewReader(marshaledProject))
 	if err != nil {
 		return nil, err
 	}
@@ -175,9 +175,8 @@ func (p *ProjectsService) Create(project *Project) (*Project, error) {
 	}
 	if response.StatusCode == 201 {
 		location := response.Header.Get("Location")
-		fmt.Printf("Location: '%s'\n", location)
 		projectId := -1
-		fmt.Sscanf("/projects/%d", location, &projectId)
+		fmt.Sscanf(location, "/projects/%d", &projectId)
 		if projectId == -1 {
 			return nil, &ResponseError{&Response{"No id for project received"}}
 		}
@@ -197,4 +196,69 @@ func (p *ProjectsService) Create(project *Project) (*Project, error) {
 		return nil, &ResponseError{&apiResponse}
 	}
 	return nil, &ResponseError{&Response{response.Status}}
+}
+
+func (p *ProjectsService) Delete(project *Project) (bool, error) {
+	request, err := p.h.CreateRequest("DELETE", fmt.Sprintf("/projects/%d", project.Id), nil)
+	if err != nil {
+		return false, err
+	}
+	response, err := p.h.Client().Do(request)
+	if err != nil {
+		return false, err
+	}
+	if response.StatusCode == 200 {
+		return true, nil
+	} else if response.StatusCode == 400 {
+		return false, nil
+	} else {
+		panic(response.Status)
+	}
+}
+
+func (p *ProjectsService) Update(project *Project) (*Project, error) {
+	marshaledProject, err := json.Marshal(ProjectRequest{Project: project})
+	if err != nil {
+		return nil, err
+	}
+	request, err := p.h.CreateRequest("PUT", fmt.Sprintf("/projects/%d", project.Id), bytes.NewReader(marshaledProject))
+	if err != nil {
+		return nil, err
+	}
+	response, err := p.h.Client().Do(request)
+	if err != nil {
+		return nil, err
+	}
+	if response.StatusCode != 200 {
+		responseBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, err
+		}
+		apiResponse := Response{}
+		err = json.Unmarshal(responseBytes, &apiResponse)
+		if err != nil {
+			return nil, err
+		}
+		return nil, &ResponseError{&apiResponse}
+	}
+	return project, nil
+}
+
+func (p *ProjectsService) Toggle(project *Project) error {
+	request, err := p.h.CreateRequest("PUT", fmt.Sprintf("/projects/%d/toggle", project.Id), nil)
+	if err != nil {
+		return err
+	}
+	response, err := p.h.Client().Do(request)
+	if err != nil {
+		return err
+	}
+	if response.StatusCode == 200 {
+		return nil
+	} else if response.StatusCode == 400 {
+		hint := response.Header.Get("Hint")
+		return &ResponseError{&Response{hint}}
+	} else {
+		panic(response.Status)
+	}
 }

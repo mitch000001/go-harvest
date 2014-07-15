@@ -72,7 +72,7 @@ func TestFindProject(t *testing.T) {
 	}
 }
 
-func TestCreateProject(t *testing.T) {
+func TestCreateAndDeleteProject(t *testing.T) {
 	client := createClient(t)
 	project := Project{
 		Name:     "foo",
@@ -82,15 +82,77 @@ func TestCreateProject(t *testing.T) {
 		BudgetBy: "none",
 	}
 
-	newProject, err := client.Projects.Create(&project)
+	createdProject, err := client.Projects.Create(&project)
 
 	if err != nil {
 		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
 	}
-	if newProject == nil {
+	if createdProject == nil {
 		t.Fatal("Expected project not to be nil")
 	}
-	if newProject.Id == 0 {
+	if createdProject.Id == 0 {
 		t.Fatal("Expected Id to be set")
+	}
+	t.Logf("Got returned project: %+#v\n", createdProject)
+
+	deleted, err := client.Projects.Delete(createdProject)
+	if err != nil {
+		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
+	}
+	if !deleted {
+		t.Fatalf("Could not delete project created for test")
+	}
+}
+
+func TestUpdateProject(t *testing.T) {
+	client := createClient(t)
+	project := Project{
+		Name:     "foo",
+		ClientId: 2605222,
+		BillBy:   "none",
+		Budget:   100.00,
+		BudgetBy: "none",
+		Billable: true,
+	}
+
+	createdProject, err := client.Projects.Create(&project)
+	if err != nil {
+		panic(err)
+	}
+	defer client.Projects.Delete(createdProject)
+
+	createdProject.Billable = false
+
+	updatedProject, err := client.Projects.Update(createdProject)
+	if err != nil {
+		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
+	}
+	if updatedProject == nil {
+		t.Fatal("Expected project not to be nil")
+	}
+	if updatedProject.Billable != createdProject.Billable {
+		t.Fatal("Expected updated project billable to be false, got true")
+	}
+}
+
+func TestToggleProject(t *testing.T) {
+	client := createClient(t)
+	project := Project{
+		Name:     "foo",
+		ClientId: 2605222,
+		BillBy:   "none",
+		Budget:   100.00,
+		BudgetBy: "none",
+		Billable: true,
+	}
+	createdProject, err := client.Projects.Create(&project)
+	if err != nil {
+		panic(err)
+	}
+	defer client.Projects.Delete(createdProject)
+
+	err = client.Projects.Toggle(createdProject)
+	if err != nil {
+		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
 	}
 }
