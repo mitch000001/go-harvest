@@ -34,10 +34,8 @@ type User struct {
 	CreatedAt                    time.Time `json:"created_at"`
 }
 
-type UserRequest UserResponse
-
-type UserResponse struct {
-	Response
+type UserPayload struct {
+	ErrorPayload
 	User *User `json:"user"`
 }
 
@@ -64,7 +62,7 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 	if err != nil {
 		return nil, err
 	}
-	userResponses := make([]*UserResponse, 0)
+	userResponses := make([]*UserPayload, 0)
 	err = json.Unmarshal(responseBytes, &userResponses)
 	if err != nil {
 		return nil, err
@@ -86,22 +84,22 @@ func (s *UsersService) Find(id int) (*User, error) {
 		return nil, err
 	}
 	if response.StatusCode == 404 {
-		return nil, &ResponseError{&Response{fmt.Sprintf("No user found with id %d", id)}}
+		return nil, &ResponseError{&ErrorPayload{fmt.Sprintf("No user found with id %d", id)}}
 	}
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}
-	userResponse := UserResponse{}
-	err = json.Unmarshal(responseBytes, &userResponse)
+	userPayload := UserPayload{}
+	err = json.Unmarshal(responseBytes, &userPayload)
 	if err != nil {
 		return nil, err
 	}
-	return userResponse.User, nil
+	return userPayload.User, nil
 }
 
 func (s *UsersService) Create(user *User) (*User, error) {
-	marshaledUser, err := json.Marshal(&UserRequest{User: user})
+	marshaledUser, err := json.Marshal(&UserPayload{User: user})
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +119,7 @@ func (s *UsersService) Create(user *User) (*User, error) {
 		if err != nil {
 			return nil, err
 		}
-		apiResponse := Response{}
+		apiResponse := ErrorPayload{}
 		err = json.Unmarshal(responseBytes, &apiResponse)
 		if err != nil {
 			return nil, err
@@ -149,7 +147,7 @@ func (s *UsersService) ResetPassword(user *User) error {
 }
 
 func (s *UsersService) Update(user *User) (*User, error) {
-	marshaledUser, err := json.Marshal(&UserRequest{User: user})
+	marshaledUser, err := json.Marshal(&UserPayload{User: user})
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +165,7 @@ func (s *UsersService) Update(user *User) (*User, error) {
 		if err != nil {
 			return nil, err
 		}
-		apiResponse := Response{}
+		apiResponse := ErrorPayload{}
 		err = json.Unmarshal(responseBytes, &apiResponse)
 		if err != nil {
 			return nil, err

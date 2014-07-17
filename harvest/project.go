@@ -63,12 +63,10 @@ type Project struct {
 	HintLatestRecordAt   ShortDate `json:"hint_latest_record_at,omitempty"`
 }
 
-type ProjectResponse struct {
-	Response
+type ProjectPayload struct {
+	ErrorPayload
 	Project *Project `json:"project"`
 }
-
-type ProjectRequest ProjectResponse
 
 type ProjectsService struct {
 	h *Client
@@ -91,7 +89,7 @@ func (p *ProjectsService) All() ([]*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	projectResponses := make([]*ProjectResponse, 0)
+	projectResponses := make([]*ProjectPayload, 0)
 	err = json.Unmarshal(responseBytes, &projectResponses)
 	if err != nil {
 		return nil, err
@@ -124,7 +122,7 @@ func (p *ProjectsService) AllUpdatedSince(updatedSince time.Time) ([]*Project, e
 	if err != nil {
 		return nil, err
 	}
-	projectResponses := make([]*ProjectResponse, 0)
+	projectResponses := make([]*ProjectPayload, 0)
 	err = json.Unmarshal(responseBytes, &projectResponses)
 	if err != nil {
 		return nil, err
@@ -146,13 +144,13 @@ func (p *ProjectsService) Find(id int) (*Project, error) {
 		return nil, err
 	}
 	if response.StatusCode == 404 {
-		return nil, &ResponseError{&Response{fmt.Sprintf("No project found for id %d", id)}}
+		return nil, &ResponseError{&ErrorPayload{fmt.Sprintf("No project found for id %d", id)}}
 	}
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}
-	projectResponse := ProjectResponse{}
+	projectResponse := ProjectPayload{}
 	err = json.Unmarshal(responseBytes, &projectResponse)
 	if err != nil {
 		return nil, err
@@ -161,7 +159,7 @@ func (p *ProjectsService) Find(id int) (*Project, error) {
 }
 
 func (p *ProjectsService) Create(project *Project) (*Project, error) {
-	marshaledProject, err := json.Marshal(ProjectRequest{Project: project})
+	marshaledProject, err := json.Marshal(ProjectPayload{Project: project})
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +176,7 @@ func (p *ProjectsService) Create(project *Project) (*Project, error) {
 		projectId := -1
 		fmt.Sscanf(location, "/projects/%d", &projectId)
 		if projectId == -1 {
-			return nil, &ResponseError{&Response{"No id for project received"}}
+			return nil, &ResponseError{&ErrorPayload{"No id for project received"}}
 		}
 		project.Id = projectId
 		return project, nil
@@ -188,14 +186,14 @@ func (p *ProjectsService) Create(project *Project) (*Project, error) {
 		if err != nil {
 			return nil, err
 		}
-		apiResponse := Response{}
+		apiResponse := ErrorPayload{}
 		err = json.Unmarshal(responseBytes, &apiResponse)
 		if err != nil {
 			return nil, err
 		}
 		return nil, &ResponseError{&apiResponse}
 	}
-	return nil, &ResponseError{&Response{response.Status}}
+	return nil, &ResponseError{&ErrorPayload{response.Status}}
 }
 
 func (p *ProjectsService) Delete(project *Project) (bool, error) {
@@ -217,7 +215,7 @@ func (p *ProjectsService) Delete(project *Project) (bool, error) {
 }
 
 func (p *ProjectsService) Update(project *Project) (*Project, error) {
-	marshaledProject, err := json.Marshal(ProjectRequest{Project: project})
+	marshaledProject, err := json.Marshal(ProjectPayload{Project: project})
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +232,7 @@ func (p *ProjectsService) Update(project *Project) (*Project, error) {
 		if err != nil {
 			return nil, err
 		}
-		apiResponse := Response{}
+		apiResponse := ErrorPayload{}
 		err = json.Unmarshal(responseBytes, &apiResponse)
 		if err != nil {
 			return nil, err
@@ -257,7 +255,7 @@ func (p *ProjectsService) Toggle(project *Project) error {
 		return nil
 	} else if response.StatusCode == 400 {
 		hint := response.Header.Get("Hint")
-		return &ResponseError{&Response{hint}}
+		return &ResponseError{&ErrorPayload{hint}}
 	} else {
 		panic(response.Status)
 	}

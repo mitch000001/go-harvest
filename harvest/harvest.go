@@ -115,14 +115,14 @@ func (h *Client) Account() (*Account, error) {
 	return &account, nil
 }
 
-type Response struct {
+type ErrorPayload struct {
 	Message string `json:"message,omitempty"`
 }
 
 type ResponseError struct {
-	Response *Response
+	ErrorPayload *ErrorPayload
 }
 
 func (r *ResponseError) Error() string {
-	return r.Response.Message
+	return r.ErrorPayload.Message
 }
