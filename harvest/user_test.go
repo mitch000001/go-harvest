@@ -7,12 +7,17 @@ import (
 
 func TestFindAllUsersUpdatedSince(t *testing.T) {
 	client := createClient(t)
-	users, err := client.Users.AllUpdatedSince(time.Now())
+	updatedSince := time.Now().Add(-2 * time.Second)
+	t.Logf("UpdatedSince: %+#v\n", updatedSince)
+	users, err := client.Users.AllUpdatedSince(updatedSince)
 	if err != nil {
 		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
 	}
-	if len(users) != 0 {
-		t.Fatalf("Expected 0 user, got %d", len(users))
+	for _, u := range users {
+		t.Logf("User: '%+#v'\n", u)
+	}
+	if len(users) != 1 {
+		t.Fatalf("Expected 1 user, got %d", len(users))
 	}
 }
 

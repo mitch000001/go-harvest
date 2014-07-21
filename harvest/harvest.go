@@ -41,21 +41,21 @@ type authenticationTransport interface {
 	Client() *http.Client
 }
 
-// newClient creates a new Client for the provided subdomain
-func newClient(subdomain string) (*Client, error) {
+// newHarvest creates a new Client for the provided subdomain
+func newHarvest(subdomain string) (*Harvest, error) {
 	baseUrl, err := parseSubdomain(subdomain)
 	if err != nil {
 		return nil, err
 	}
-	h := &Client{baseUrl: baseUrl}
+	h := &Harvest{baseUrl: baseUrl}
 	h.Users = NewUsersService(h)
 	h.Projects = NewProjectsService(h)
 	return h, nil
 }
 
 // NewBasicAuthClient creates a new Client with BasicAuth as authentication method
-func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*Client, error) {
-	h, err := newClient(subdomain)
+func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*Harvest, error) {
+	h, err := newHarvest(subdomain)
 	if err != nil {
 		return nil, err
 	}
@@ -64,8 +64,8 @@ func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*Client, err
 }
 
 // NewOAuthClient creates a new Client with OAuth as authentication method
-func NewOAuthClient(subdomain string, config *oauth.Config) (*Client, error) {
-	h, err := newClient(subdomain)
+func NewOAuthClient(subdomain string, config *oauth.Config) (*Harvest, error) {
+	h, err := newHarvest(subdomain)
 	if err != nil {
 		return nil, err
 	}
@@ -73,15 +73,15 @@ func NewOAuthClient(subdomain string, config *oauth.Config) (*Client, error) {
 	return h, err
 }
 
-type Client struct {
+type Harvest struct {
 	authenticationTransport
 	baseUrl  *url.URL // API endpoint base URL
 	Users    *UsersService
 	Projects *ProjectsService
 }
 
-func (h *Client) CreateRequest(method string, relativeUrl string, body io.Reader) (*http.Request, error) {
-	requestUrl, err := h.baseUrl.Parse(relativeUrl)
+func (h *Harvest) ProcessRequest(method string, path string, body io.Reader) (*http.Response, error) {
+	requestUrl, err := h.baseUrl.Parse(path)
 	if err != nil {
 		return nil, err
 	}
@@ -91,15 +91,18 @@ func (h *Client) CreateRequest(method string, relativeUrl string, body io.Reader
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
-	return request, nil
-}
-
-func (h *Client) Account() (*Account, error) {
-	request, err := h.CreateRequest("GET", "/account/who_am_i", nil)
 	if err != nil {
 		return nil, err
 	}
 	response, err := h.Client().Do(request)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+func (h *Harvest) Account() (*Account, error) {
+	response, err := h.ProcessRequest("GET", "/account/who_am_i", nil)
 	if err != nil {
 		return nil, err
 	}

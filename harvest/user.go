@@ -10,11 +10,12 @@ import (
 )
 
 type UsersService struct {
-	h *Client
+	h    *Harvest
 }
 
-func NewUsersService(client *Client) *UsersService {
-	return &UsersService{h: client}
+func NewUsersService(client *Harvest) *UsersService {
+	service := UsersService{h: client}
+	return &service
 }
 
 type User struct {
@@ -50,11 +51,7 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 		values.Add("updated_since", updatedSince.UTC().String())
 		peopleUrl = peopleUrl + "?" + values.Encode()
 	}
-	request, err := s.h.CreateRequest("GET", peopleUrl, nil)
-	if err != nil {
-		return nil, err
-	}
-	response, err := s.h.Client().Do(request)
+	response, err := s.h.ProcessRequest("GET", peopleUrl, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -74,40 +71,32 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 	return users, nil
 }
 
-func (s *UsersService) Find(id int) (*User, error) {
-	request, err := s.h.CreateRequest("GET", fmt.Sprintf("/people/%d", id), nil)
-	if err != nil {
-		return nil, err
-	}
-	response, err := s.h.Client().Do(request)
-	if err != nil {
-		return nil, err
-	}
-	if response.StatusCode == 404 {
-		return nil, &ResponseError{&ErrorPayload{fmt.Sprintf("No user found with id %d", id)}}
-	}
-	responseBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	userPayload := UserPayload{}
-	err = json.Unmarshal(responseBytes, &userPayload)
-	if err != nil {
-		return nil, err
-	}
-	return userPayload.User, nil
-}
+// func (s *UsersService) Find(id int) (*User, error) {
+// 	response, err := s.h.ProcessRequest("GET", fmt.Sprintf("/people/%d", id), nil)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if response.StatusCode == 404 {
+// 		return nil, &ResponseError{&ErrorPayload{fmt.Sprintf("No user found with id %d", id)}}
+// 	}
+// 	responseBytes, err := ioutil.ReadAll(response.Body)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	userPayload := UserPayload{}
+// 	err = json.Unmarshal(responseBytes, &userPayload)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return userPayload.User, nil
+// }
 
 func (s *UsersService) Create(user *User) (*User, error) {
 	marshaledUser, err := json.Marshal(&UserPayload{User: user})
 	if err != nil {
 		return nil, err
 	}
-	request, err := s.h.CreateRequest("POST", "/people", bytes.NewReader(marshaledUser))
-	if err != nil {
-		return nil, err
-	}
-	response, err := s.h.Client().Do(request)
+	response, err := s.h.ProcessRequest("POST", "/people", bytes.NewReader(marshaledUser))
 	if err != nil {
 		return nil, err
 	}
@@ -135,11 +124,7 @@ func (s *UsersService) ResetPassword(user *User) error {
 	if err != nil {
 		return err
 	}
-	request, err := s.h.CreateRequest("POST", fmt.Sprintf("/people/%d/reset_password", user.Id), bytes.NewBuffer(marshaledUser))
-	if err != nil {
-		return err
-	}
-	_, err = s.h.Client().Do(request)
+	_, err = s.h.ProcessRequest("POST", fmt.Sprintf("/people/%d/reset_password", user.Id), bytes.NewBuffer(marshaledUser))
 	if err != nil {
 		return err
 	}
@@ -151,12 +136,7 @@ func (s *UsersService) Update(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	request, err := s.h.CreateRequest("PUT", fmt.Sprintf("/people/%d", user.Id), bytes.NewBuffer(marshaledUser))
-	if err != nil {
-		return nil, err
-	}
-	request.Header.Set("Content-Type", "application/json")
-	response, err := s.h.Client().Do(request)
+	response, err := s.h.ProcessRequest("PUT", fmt.Sprintf("/people/%d", user.Id), bytes.NewBuffer(marshaledUser))
 	if err != nil {
 		return nil, err
 	}
@@ -176,11 +156,7 @@ func (s *UsersService) Update(user *User) (*User, error) {
 }
 
 func (s *UsersService) Delete(user *User) (bool, error) {
-	request, err := s.h.CreateRequest("DELETE", fmt.Sprintf("/people/%d", user.Id), nil)
-	if err != nil {
-		return false, err
-	}
-	response, err := s.h.Client().Do(request)
+	response, err := s.h.ProcessRequest("DELETE", fmt.Sprintf("/people/%d", user.Id), nil)
 	if err != nil {
 		return false, err
 	}
@@ -194,11 +170,7 @@ func (s *UsersService) Delete(user *User) (bool, error) {
 }
 
 func (s *UsersService) Toggle(user *User) (bool, error) {
-	request, err := s.h.CreateRequest("POST", fmt.Sprintf("/people/%d", user.Id), nil)
-	if err != nil {
-		return false, err
-	}
-	response, err := s.h.Client().Do(request)
+	response, err := s.h.ProcessRequest("POST", fmt.Sprintf("/people/%d", user.Id), nil)
 	if err != nil {
 		return false, err
 	}

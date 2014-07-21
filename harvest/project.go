@@ -69,23 +69,19 @@ type Project struct {
 
 type ProjectPayload struct {
 	ErrorPayload
-	Project *Project `json:"project"`
+	Project *Project `json:"project,omitempty"`
 }
 
 type ProjectsService struct {
-	h *Client
+	h *Harvest
 }
 
-func NewProjectsService(client *Client) *ProjectsService {
+func NewProjectsService(client *Harvest) *ProjectsService {
 	return &ProjectsService{client}
 }
 
 func (p *ProjectsService) All() ([]*Project, error) {
-	request, err := p.h.CreateRequest("GET", "/projects", nil)
-	if err != nil {
-		return nil, err
-	}
-	response, err := p.h.Client().Do(request)
+	response, err := p.h.ProcessRequest("GET", "/projects", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -114,11 +110,7 @@ func (p *ProjectsService) AllUpdatedSince(updatedSince time.Time) ([]*Project, e
 	if len(params) > 0 {
 		query = "?" + params.Encode()
 	}
-	request, err := p.h.CreateRequest("GET", fmt.Sprintf("/projects%s", query), nil)
-	if err != nil {
-		return nil, err
-	}
-	response, err := p.h.Client().Do(request)
+	response, err := p.h.ProcessRequest("GET", fmt.Sprintf("/projects%s", query), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -139,11 +131,7 @@ func (p *ProjectsService) AllUpdatedSince(updatedSince time.Time) ([]*Project, e
 }
 
 func (p *ProjectsService) Find(id int) (*Project, error) {
-	request, err := p.h.CreateRequest("GET", fmt.Sprintf("/projects/%d", id), nil)
-	if err != nil {
-		return nil, err
-	}
-	response, err := p.h.Client().Do(request)
+	response, err := p.h.ProcessRequest("GET", fmt.Sprintf("/projects/%d", id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -167,11 +155,7 @@ func (p *ProjectsService) Create(project *Project) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	request, err := p.h.CreateRequest("POST", "/projects", bytes.NewReader(marshaledProject))
-	if err != nil {
-		return nil, err
-	}
-	response, err := p.h.Client().Do(request)
+	response, err := p.h.ProcessRequest("POST", "/projects", bytes.NewReader(marshaledProject))
 	if err != nil {
 		return nil, err
 	}
@@ -201,11 +185,7 @@ func (p *ProjectsService) Create(project *Project) (*Project, error) {
 }
 
 func (p *ProjectsService) Delete(project *Project) (bool, error) {
-	request, err := p.h.CreateRequest("DELETE", fmt.Sprintf("/projects/%d", project.Id), nil)
-	if err != nil {
-		return false, err
-	}
-	response, err := p.h.Client().Do(request)
+	response, err := p.h.ProcessRequest("DELETE", fmt.Sprintf("/projects/%d", project.Id), nil)
 	if err != nil {
 		return false, err
 	}
@@ -223,11 +203,7 @@ func (p *ProjectsService) Update(project *Project) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	request, err := p.h.CreateRequest("PUT", fmt.Sprintf("/projects/%d", project.Id), bytes.NewReader(marshaledProject))
-	if err != nil {
-		return nil, err
-	}
-	response, err := p.h.Client().Do(request)
+	response, err := p.h.ProcessRequest("PUT", fmt.Sprintf("/projects/%d", project.Id), bytes.NewReader(marshaledProject))
 	if err != nil {
 		return nil, err
 	}
@@ -247,11 +223,7 @@ func (p *ProjectsService) Update(project *Project) (*Project, error) {
 }
 
 func (p *ProjectsService) Toggle(project *Project) error {
-	request, err := p.h.CreateRequest("PUT", fmt.Sprintf("/projects/%d/toggle", project.Id), nil)
-	if err != nil {
-		return err
-	}
-	response, err := p.h.Client().Do(request)
+	response, err := p.h.ProcessRequest("PUT", fmt.Sprintf("/projects/%d/toggle", project.Id), nil)
 	if err != nil {
 		return err
 	}
