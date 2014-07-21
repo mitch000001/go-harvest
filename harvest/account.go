@@ -5,8 +5,8 @@ import (
 )
 
 type Account struct {
-	Company *Company `json:"company"`
-	User    *User    `json:"user"`
+	Company *Company `json:"company,omitempty"`
+	User    *User    `json:"user,omitempty"`
 }
 
 type WeekStartDay string
@@ -123,22 +123,22 @@ const (
 )
 
 type Modules struct {
-	Expenses  bool `json:"expenses"`
-	Invoices  bool `json:"invoices"`
-	Estimates bool `json:"estimates"`
-	Approval  bool `json:"approval"`
+	Expenses  bool `json:"expenses,omitempty"`
+	Invoices  bool `json:"invoices,omitempty"`
+	Estimates bool `json:"estimates,omitempty"`
+	Approval  bool `json:"approval,omitempty"`
 }
 
 type Company struct {
-	BaseUri            string             `json:"base_uri"`
-	FullDomain         string             `json:"full_domain"`
-	Name               string             `json:"name"`
-	Active             bool               `json:"active"`
-	WeekStartDay       WeekStartDay       `json:"week_start_day"`
-	TimeFormat         TimeFormat         `json:"time_format"`
-	Clock              ClockFormat        `json:"clock"`
-	DecimalSymbol      DecimalSymbol      `json:"decimal_symbol"`
-	ColorScheme        ColorScheme        `json:"color_scheme"`
-	Modules            *Modules           `json:"modules"`
-	ThousandsSeparator ThousandsSeparator `json:"thousands_separator"`
+	BaseUri            string             `json:"base_uri,omitempty"`
+	FullDomain         string             `json:"full_domain,omitempty"`
+	Name               string             `json:"name,omitempty"`
+	Active             bool               `json:"active,omitempty"`
+	WeekStartDay       WeekStartDay       `json:"week_start_day,omitempty"`
+	TimeFormat         TimeFormat         `json:"time_format,omitempty"`
+	Clock              ClockFormat        `json:"clock,omitempty"`
+	DecimalSymbol      DecimalSymbol      `json:"decimal_symbol,omitempty"`
+	ColorScheme        ColorScheme        `json:"color_scheme,omitempty"`
+	Modules            *Modules           `json:"modules,omitempty"`
+	ThousandsSeparator ThousandsSeparator `json:"thousands_separator,omitempty"`
 }

@@ -11,8 +11,12 @@ import (
 
 type ShortDate time.Time
 
+func (date ShortDate) IsZero() bool {
+	return time.Time(date).IsZero()
+}
+
 func (date ShortDate) MarshalJSON() ([]byte, error) {
-	if time.Time(date).Format("2006-01-02") == "0001-01-01" {
+	if date.IsZero() {
 		return json.Marshal("")
 	}
 	return json.Marshal(time.Time(date).Format("2006-01-02"))

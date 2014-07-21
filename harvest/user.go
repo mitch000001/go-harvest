@@ -18,25 +18,25 @@ func NewUsersService(client *Client) *UsersService {
 }
 
 type User struct {
-	Id                           int       `json:"id"`
-	Email                        string    `json:"email"`
-	FirstName                    string    `json:"first_name"`
-	LastName                     string    `json:"last_name"`
-	HasAccessToAllFutureProjects bool      `json:"has_access_to_all_future_projects"`
-	DefaultHourlyRate            int       `json:"default_hourly_rate"`
-	IsActive                     bool      `json:"is_active"`
-	IsAdmin                      bool      `json:"is_admin"`
-	IsContractor                 bool      `json:"is_contractor"`
-	Telephone                    string    `json:"telephone"`
-	Department                   string    `json:"department"`
-	Timezone                     string    `json:"timezone"`
-	UpdatedAt                    time.Time `json:"updated_at"`
-	CreatedAt                    time.Time `json:"created_at"`
+	Id                           int       `json:"id,omitempty"`
+	Email                        string    `json:"email,omitempty"`
+	FirstName                    string    `json:"first_name,omitempty"`
+	LastName                     string    `json:"last_name,omitempty"`
+	HasAccessToAllFutureProjects bool      `json:"has_access_to_all_future_projects,omitempty"`
+	DefaultHourlyRate            float64   `json:"default_hourly_rate,omitempty"`
+	IsActive                     bool      `json:"is_active,omitempty"`
+	IsAdmin                      bool      `json:"is_admin,omitempty"`
+	IsContractor                 bool      `json:"is_contractor,omitempty"`
+	Telephone                    string    `json:"telephone,omitempty"`
+	Department                   string    `json:"department,omitempty"`
+	Timezone                     string    `json:"timezone,omitempty"`
+	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
+	CreatedAt                    time.Time `json:"created_at,omitempty"`
 }
 
 type UserPayload struct {
 	ErrorPayload
-	User *User `json:"user"`
+	User *User `json:"user,omitempty"`
 }
 
 func (s *UsersService) All() ([]*User, error) {
