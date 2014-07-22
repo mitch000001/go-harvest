@@ -71,26 +71,6 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 	return users, nil
 }
 
-// func (s *UsersService) Find(id int) (*User, error) {
-// 	response, err := s.h.ProcessRequest("GET", fmt.Sprintf("/people/%d", id), nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if response.StatusCode == 404 {
-// 		return nil, &ResponseError{&ErrorPayload{fmt.Sprintf("No user found with id %d", id)}}
-// 	}
-// 	responseBytes, err := ioutil.ReadAll(response.Body)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	userPayload := UserPayload{}
-// 	err = json.Unmarshal(responseBytes, &userPayload)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return userPayload.User, nil
-// }
-
 func (s *UsersService) Create(user *User) (*User, error) {
 	marshaledUser, err := json.Marshal(&UserPayload{User: user})
 	if err != nil {
