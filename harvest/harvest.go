@@ -50,6 +50,7 @@ func newHarvest(subdomain string) (*Harvest, error) {
 	h := &Harvest{baseUrl: baseUrl}
 	h.Users = NewUsersService(h)
 	h.Projects = NewProjectsService(h)
+	h.Clients = NewClientsService(h)
 	return h, nil
 }
 
@@ -78,6 +79,7 @@ type Harvest struct {
 	baseUrl  *url.URL // API endpoint base URL
 	Users    *UsersService
 	Projects *ProjectsService
+	Clients  *ClientsService
 }
 
 func (h *Harvest) ProcessRequest(method string, path string, body io.Reader) (*http.Response, error) {
