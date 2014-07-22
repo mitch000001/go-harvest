@@ -43,3 +43,20 @@ func createClient(t *testing.T) *Harvest {
 	}
 	return client
 }
+
+func testAllFunc(testFunc interface{}, t *testing.T) {
+	client := createClient(t)
+	users, err := client.Users.All()
+	if err != nil {
+		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
+	}
+	if len(users) != 1 {
+		t.Fatalf("Expected 1 user, got %d", len(users))
+	}
+	if users[0] == nil {
+		t.Fatal("Expected user not to be nil")
+	}
+	for _, u := range users {
+		t.Logf("User: %+#v\n", u)
+	}
+}

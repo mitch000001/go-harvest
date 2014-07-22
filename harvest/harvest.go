@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 )
 
@@ -130,4 +131,109 @@ type ResponseError struct {
 
 func (r *ResponseError) Error() string {
 	return r.ErrorPayload.Message
+}
+
+func AllTemplate(path string, payload interface{}) {}
+
+func MakeAllFunc(allFuncPointer interface{}, h *Harvest, path string) {
+	allFunction := reflect.ValueOf(allFuncPointer).Elem()
+	allFnType := allFunction.Type()
+	returnType := allFnType.Out(0)
+	zeroReturnValue := reflect.Zero(returnType)
+	allFuncBody := func([]reflect.Value) []reflect.Value {
+		response, err := h.ProcessRequest("GET", path, nil)
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(err),
+			}
+		}
+		responseBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(err),
+			}
+		}
+		payload := PayloadForType(returnType)
+		err = json.Unmarshal(responseBytes, payload)
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(err),
+			}
+		}
+		val := reflect.MakeSlice(returnType, 0, 0)
+		payloadValue := reflect.ValueOf(payload)
+		for i := 0; i < payloadValue.Elem().Len(); i++ {
+			val = reflect.Append(val, payloadValue.Elem().Index(i).Field(1))
+		}
+		return []reflect.Value{
+			val,
+			reflect.Zero(reflect.TypeOf(new(error)).Elem()),
+		}
+	}
+	v := reflect.MakeFunc(allFnType, allFuncBody)
+	allFunction.Set(v)
+}
+
+func MakeFindFunc(findFuncPointer interface{}, h *Harvest, path string) {
+	findFunction := reflect.ValueOf(findFuncPointer).Elem()
+	findFnType := findFunction.Type()
+	returnType := findFnType.Out(0)
+	zeroReturnValue := reflect.Zero(returnType)
+	findFuncBody := func(args []reflect.Value) []reflect.Value {
+		idVal := args[0]
+		response, err := h.ProcessRequest("GET", fmt.Sprintf(path, idVal.Int()), nil)
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(err),
+			}
+		}
+		if response.StatusCode == 404 {
+			err = &ResponseError{&ErrorPayload{fmt.Sprintf("Id not found: %d", idVal.Int())}}
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(&err).Elem(),
+			}
+		}
+		responseBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(err),
+			}
+		}
+		payload := PayloadForType(returnType)
+		err = json.Unmarshal(responseBytes, payload)
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(err),
+			}
+		}
+		return []reflect.Value{
+			reflect.ValueOf(payload).Elem().Field(1),
+			reflect.Zero(reflect.TypeOf(new(error)).Elem()),
+		}
+	}
+	funcValue := reflect.MakeFunc(findFnType, findFuncBody)
+	findFunction.Set(funcValue)
+}
+
+func PayloadForType(domainType reflect.Type) interface{} {
+	switch domainType {
+	case reflect.TypeOf(&Project{}):
+		return &ProjectPayload{}
+	case reflect.TypeOf([]*Project{}):
+		return &[]ProjectPayload{}
+	case reflect.TypeOf(&User{}):
+		return &UserPayload{}
+	case reflect.TypeOf([]*User{}):
+		return &[]UserPayload{}
+	default:
+		// FIXME: proper error handling
+		return nil
+	}
 }

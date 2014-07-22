@@ -11,10 +11,14 @@ import (
 
 type UsersService struct {
 	h    *Harvest
+	Find func(int) (*User, error)
+	All  func() ([]*User, error)
 }
 
 func NewUsersService(client *Harvest) *UsersService {
 	service := UsersService{h: client}
+	MakeFindFunc(&service.Find, client, "/people/%d")
+	MakeAllFunc(&service.All, client, "/people")
 	return &service
 }
 
@@ -38,10 +42,6 @@ type User struct {
 type UserPayload struct {
 	ErrorPayload
 	User *User `json:"user,omitempty"`
-}
-
-func (s *UsersService) All() ([]*User, error) {
-	return s.AllUpdatedSince(time.Time{})
 }
 
 func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) {
