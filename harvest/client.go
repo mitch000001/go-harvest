@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"time"
 )
 
@@ -67,38 +68,34 @@ func (tf *Timeframe) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type ClientAllFuncOptions struct {
+	UpdatedSince time.Time
+}
+
+func (c *ClientAllFuncOptions) BuildUrl(path string) string {
+	if !c.UpdatedSince.IsZero() {
+		values := make(url.Values)
+		values.Add("updated_since", c.UpdatedSince.UTC().String())
+		return fmt.Sprintf("%s?%s", path, values.Encode())
+	}
+	return path
+}
+
 type ClientsService struct {
-	h *Harvest
+	h       *Harvest
+	All     func(*ClientAllFuncOptions) ([]*Client, error)
+	payload *ClientPayload
 }
 
 func NewClientsService(h *Harvest) *ClientsService {
-	return &ClientsService{h}
+	service := ClientsService{h: h}
+	MakeAllFunc(&service.All, h, "clients", service.payload)
+	return &service
 }
 
 type ClientPayload struct {
 	ErrorPayload
 	Client *Client `json:"client,omitempty"`
-}
-
-func (c *ClientsService) All() ([]*Client, error) {
-	response, err := c.h.ProcessRequest("GET", "/clients", nil)
-	if err != nil {
-		return nil, err
-	}
-	responseBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	clientPayloads := make([]*ClientPayload, 0)
-	err = json.Unmarshal(responseBytes, &clientPayloads)
-	if err != nil {
-		return nil, err
-	}
-	clients := make([]*Client, len(clientPayloads))
-	for i, c := range clientPayloads {
-		clients[i] = c.Client
-	}
-	return clients, nil
 }
 
 func (c *ClientsService) Find(id int) (*Client, error) {

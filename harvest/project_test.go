@@ -7,19 +7,8 @@ import (
 
 func TestFindAllProjects(t *testing.T) {
 	client := createClient(t)
-	projects, err := client.Projects.All()
-	if err != nil {
-		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
-	}
-	if projects == nil {
-		t.Fatal("Expected projects not to be nil")
-	}
-	if len(projects) == 0 {
-		t.Fatal("Expected projects not to be empty")
-	}
-	for _, p := range projects {
-		t.Logf("Project: %+#v\n", p)
-	}
+	t.Skip()
+	testAllFunc(client.Projects.All, nil, t)
 }
 
 func TestFindAllProjectsUpdatedSince(t *testing.T) {

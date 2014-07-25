@@ -10,15 +10,43 @@ import (
 )
 
 type UsersService struct {
-	h    *Harvest
-	Find func(int) (*User, error)
-	All  func() ([]*User, error)
+	h              *Harvest
+	Find           func(int) (*User, error)
+	All            func(*UserAllFuncOptions) ([]*User, error)
+	Create         func(*User) (*User, error)
+	Update         func(*User) (*User, error)
+	Delete         func(*User) error
+	payload        *UserPayload
+	allFuncOptions *AllFuncOptions
+}
+
+func (u *UsersService) AllFunc() interface{} {
+	return &u.All
+}
+
+func (u *UsersService) FindFunc() interface{} {
+	return &u.Find
+}
+
+func (u *UsersService) CreateFunc() interface{} {
+	return &u.Create
+}
+
+func (u *UsersService) UpdateFunc() interface{} {
+	return &u.Update
+}
+
+func (u *UsersService) DeleteFunc() interface{} {
+	return &u.Delete
+}
+
+func (u UsersService) ResourcePath() string {
+	return "/people"
 }
 
 func NewUsersService(client *Harvest) *UsersService {
 	service := UsersService{h: client}
-	MakeFindFunc(&service.Find, client, "/people/%d")
-	MakeAllFunc(&service.All, client, "/people")
+	MakeCrudFunctions(&service, client, service.payload)
 	return &service
 }
 
@@ -42,6 +70,19 @@ type User struct {
 type UserPayload struct {
 	ErrorPayload
 	User *User `json:"user,omitempty"`
+}
+
+type UserAllFuncOptions struct {
+	UpdatedSince time.Time
+}
+
+func (a *UserAllFuncOptions) BuildUrl(path string) string {
+	if !a.UpdatedSince.IsZero() {
+		values := make(url.Values)
+		values.Add("updated_since", a.UpdatedSince.UTC().String())
+		return fmt.Sprintf("%s?%s", path, values.Encode())
+	}
+	return path
 }
 
 func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) {
@@ -71,34 +112,6 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 	return users, nil
 }
 
-func (s *UsersService) Create(user *User) (*User, error) {
-	marshaledUser, err := json.Marshal(&UserPayload{User: user})
-	if err != nil {
-		return nil, err
-	}
-	response, err := s.h.ProcessRequest("POST", "/people", bytes.NewReader(marshaledUser))
-	if err != nil {
-		return nil, err
-	}
-	location := response.Header.Get("Location")
-	userId := -1
-	fmt.Sscanf(location, "/people/%d", &userId)
-	if userId == -1 {
-		responseBytes, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return nil, err
-		}
-		apiResponse := ErrorPayload{}
-		err = json.Unmarshal(responseBytes, &apiResponse)
-		if err != nil {
-			return nil, err
-		}
-		return nil, &ResponseError{&apiResponse}
-	}
-	user.Id = userId
-	return user, nil
-}
-
 func (s *UsersService) ResetPassword(user *User) error {
 	marshaledUser, err := json.Marshal(user)
 	if err != nil {
@@ -109,44 +122,6 @@ func (s *UsersService) ResetPassword(user *User) error {
 		return err
 	}
 	return nil
-}
-
-func (s *UsersService) Update(user *User) (*User, error) {
-	marshaledUser, err := json.Marshal(&UserPayload{User: user})
-	if err != nil {
-		return nil, err
-	}
-	response, err := s.h.ProcessRequest("PUT", fmt.Sprintf("/people/%d", user.Id), bytes.NewBuffer(marshaledUser))
-	if err != nil {
-		return nil, err
-	}
-	if response.StatusCode != 200 {
-		responseBytes, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return nil, err
-		}
-		apiResponse := ErrorPayload{}
-		err = json.Unmarshal(responseBytes, &apiResponse)
-		if err != nil {
-			return nil, err
-		}
-		return nil, &ResponseError{&apiResponse}
-	}
-	return user, nil
-}
-
-func (s *UsersService) Delete(user *User) (bool, error) {
-	response, err := s.h.ProcessRequest("DELETE", fmt.Sprintf("/people/%d", user.Id), nil)
-	if err != nil {
-		return false, err
-	}
-	if response.StatusCode == 200 {
-		return true, nil
-	} else if response.StatusCode == 400 {
-		return false, nil
-	} else {
-		panic(response.Status)
-	}
 }
 
 func (s *UsersService) Toggle(user *User) (bool, error) {

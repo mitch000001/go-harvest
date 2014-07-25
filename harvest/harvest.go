@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"errors"
@@ -133,40 +134,68 @@ func (r *ResponseError) Error() string {
 	return r.ErrorPayload.Message
 }
 
-func AllTemplate(path string, payload interface{}) {}
+type AllFuncOptions interface {
+	BuildUrl(string) string
+}
 
-func MakeAllFunc(allFuncPointer interface{}, h *Harvest, path string) {
+type CrudService interface {
+	AllFunc() interface{}
+	FindFunc() interface{}
+	CreateFunc() interface{}
+	UpdateFunc() interface{}
+	DeleteFunc() interface{}
+	ResourcePath() string
+}
+
+func MakeCrudFunctions(service CrudService, client *Harvest, payloadType interface{}) {
+	resourcePath := service.ResourcePath()
+	parameterizedResourcePath := fmt.Sprintf("%s/%%d", resourcePath)
+	MakeAllFunc(service.AllFunc(), client, service.ResourcePath(), payloadType)
+	MakeFindFunc(service.FindFunc(), client, parameterizedResourcePath, payloadType)
+	MakeCreateFunc(service.CreateFunc(), client, resourcePath, payloadType)
+	MakeUpdateFunc(service.UpdateFunc(), client, parameterizedResourcePath, payloadType)
+	MakeDeleteFunc(service.DeleteFunc(), client, parameterizedResourcePath, payloadType)
+}
+
+func MakeAllFunc(allFuncPointer interface{}, h *Harvest, path string, payloadType interface{}) {
 	allFunction := reflect.ValueOf(allFuncPointer).Elem()
 	allFnType := allFunction.Type()
 	returnType := allFnType.Out(0)
 	zeroReturnValue := reflect.Zero(returnType)
-	allFuncBody := func([]reflect.Value) []reflect.Value {
-		response, err := h.ProcessRequest("GET", path, nil)
+	allFuncBody := func(args []reflect.Value) []reflect.Value {
+		pathVal := reflect.ValueOf(&path)
+		if !args[0].IsNil() {
+			urlVal := args[0].Elem().MethodByName("BuildUrl").Call([]reflect.Value{reflect.ValueOf(path)})[0]
+			pathVal.Elem().Set(urlVal)
+		}
+
+		response, err := h.ProcessRequest("GET", pathVal.Elem().String(), nil)
 		if err != nil {
 			return []reflect.Value{
 				zeroReturnValue,
-				reflect.ValueOf(err),
+				reflect.ValueOf(&err).Elem(),
 			}
 		}
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			return []reflect.Value{
 				zeroReturnValue,
-				reflect.ValueOf(err),
+				reflect.ValueOf(&err).Elem(),
 			}
 		}
-		payload := PayloadForType(returnType)
-		err = json.Unmarshal(responseBytes, payload)
+		payloadTyp := reflect.TypeOf(payloadType)
+		payload := reflect.New(reflect.SliceOf(payloadTyp)).Interface()
+		err = json.Unmarshal(responseBytes, &payload)
 		if err != nil {
 			return []reflect.Value{
 				zeroReturnValue,
-				reflect.ValueOf(err),
+				reflect.ValueOf(&err).Elem(),
 			}
 		}
 		val := reflect.MakeSlice(returnType, 0, 0)
-		payloadValue := reflect.ValueOf(payload)
-		for i := 0; i < payloadValue.Elem().Len(); i++ {
-			val = reflect.Append(val, payloadValue.Elem().Index(i).Field(1))
+		payloadValue := reflect.Indirect(reflect.ValueOf(payload))
+		for i := 0; i < payloadValue.Len(); i++ {
+			val = reflect.Append(val, payloadValue.Index(i).Elem().Field(1))
 		}
 		return []reflect.Value{
 			val,
@@ -177,7 +206,7 @@ func MakeAllFunc(allFuncPointer interface{}, h *Harvest, path string) {
 	allFunction.Set(v)
 }
 
-func MakeFindFunc(findFuncPointer interface{}, h *Harvest, path string) {
+func MakeFindFunc(findFuncPointer interface{}, h *Harvest, path string, payloadType interface{}) {
 	findFunction := reflect.ValueOf(findFuncPointer).Elem()
 	findFnType := findFunction.Type()
 	returnType := findFnType.Out(0)
@@ -188,7 +217,7 @@ func MakeFindFunc(findFuncPointer interface{}, h *Harvest, path string) {
 		if err != nil {
 			return []reflect.Value{
 				zeroReturnValue,
-				reflect.ValueOf(err),
+				reflect.ValueOf(&err).Elem(),
 			}
 		}
 		if response.StatusCode == 404 {
@@ -202,19 +231,19 @@ func MakeFindFunc(findFuncPointer interface{}, h *Harvest, path string) {
 		if err != nil {
 			return []reflect.Value{
 				zeroReturnValue,
-				reflect.ValueOf(err),
+				reflect.ValueOf(&err).Elem(),
 			}
 		}
-		payload := PayloadForType(returnType)
-		err = json.Unmarshal(responseBytes, payload)
+		payload := reflect.New(reflect.TypeOf(payloadType)).Interface()
+		err = json.Unmarshal(responseBytes, &payload)
 		if err != nil {
 			return []reflect.Value{
 				zeroReturnValue,
-				reflect.ValueOf(err),
+				reflect.ValueOf(&err).Elem(),
 			}
 		}
 		return []reflect.Value{
-			reflect.ValueOf(payload).Elem().Field(1),
+			reflect.Indirect(reflect.ValueOf(payload)).Elem().Field(1),
 			reflect.Zero(reflect.TypeOf(new(error)).Elem()),
 		}
 	}
@@ -222,18 +251,146 @@ func MakeFindFunc(findFuncPointer interface{}, h *Harvest, path string) {
 	findFunction.Set(funcValue)
 }
 
-func PayloadForType(domainType reflect.Type) interface{} {
-	switch domainType {
-	case reflect.TypeOf(&Project{}):
-		return &ProjectPayload{}
-	case reflect.TypeOf([]*Project{}):
-		return &[]ProjectPayload{}
-	case reflect.TypeOf(&User{}):
-		return &UserPayload{}
-	case reflect.TypeOf([]*User{}):
-		return &[]UserPayload{}
-	default:
-		// FIXME: proper error handling
-		return nil
+func MakeCreateFunc(createFuncPointer interface{}, h *Harvest, path string, payloadType interface{}) {
+	createFunction := reflect.ValueOf(createFuncPointer).Elem()
+	createFnType := createFunction.Type()
+	returnType := createFnType.Out(0)
+	zeroReturnValue := reflect.Zero(returnType)
+	createFuncBody := func(args []reflect.Value) []reflect.Value {
+		requestPayloadValue := reflect.New(reflect.TypeOf(payloadType).Elem())
+		requestPayloadValue.Elem().Field(1).Set(args[0])
+		marshaledUser, err := json.Marshal(requestPayloadValue.Interface())
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(&err).Elem(),
+			}
+		}
+		response, err := h.ProcessRequest("POST", path, bytes.NewReader(marshaledUser))
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(&err).Elem(),
+			}
+		}
+		location := response.Header.Get("Location")
+		userId := -1
+		pathFormat := fmt.Sprintf("%s/%%d", path)
+		fmt.Sscanf(location, pathFormat, &userId)
+		if userId == -1 {
+			responseBytes, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				return []reflect.Value{
+					zeroReturnValue,
+					reflect.ValueOf(&err).Elem(),
+				}
+			}
+			apiResponse := ErrorPayload{}
+			err = json.Unmarshal(responseBytes, &apiResponse)
+			if err != nil {
+				return []reflect.Value{
+					zeroReturnValue,
+					reflect.ValueOf(&err).Elem(),
+				}
+			}
+			err = &ResponseError{&apiResponse}
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(&err).Elem(),
+			}
+		}
+		args[0].Elem().FieldByName("Id").SetInt(int64(userId))
+		return []reflect.Value{
+			args[0],
+			reflect.Zero(reflect.TypeOf(new(error)).Elem()),
+		}
 	}
+	funcValue := reflect.MakeFunc(createFnType, createFuncBody)
+	createFunction.Set(funcValue)
+}
+
+func MakeUpdateFunc(updateFuncPointer interface{}, h *Harvest, path string, payloadType interface{}) {
+	updateFunction := reflect.ValueOf(updateFuncPointer).Elem()
+	updateFnType := updateFunction.Type()
+	returnType := updateFnType.Out(0)
+	zeroReturnValue := reflect.Zero(returnType)
+	updateFuncBody := func(args []reflect.Value) []reflect.Value {
+		requestPayloadValue := reflect.New(reflect.TypeOf(payloadType).Elem())
+		requestPayloadValue.Elem().Field(1).Set(args[0])
+		marshaledPayload, err := json.Marshal(requestPayloadValue.Interface())
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(&err).Elem(),
+			}
+		}
+		id := args[0].Elem().FieldByName("Id").Int()
+		formattedPath := fmt.Sprintf(path, id)
+		response, err := h.ProcessRequest("PUT", formattedPath, bytes.NewReader(marshaledPayload))
+		if err != nil {
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(&err).Elem(),
+			}
+		}
+		if response.StatusCode != 200 {
+			responseBytes, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				return []reflect.Value{
+					zeroReturnValue,
+					reflect.ValueOf(&err).Elem(),
+				}
+			}
+			apiResponse := ErrorPayload{}
+			err = json.Unmarshal(responseBytes, &apiResponse)
+			if err != nil {
+				return []reflect.Value{
+					zeroReturnValue,
+					reflect.ValueOf(&err).Elem(),
+				}
+			}
+			err = &ResponseError{&apiResponse}
+			return []reflect.Value{
+				zeroReturnValue,
+				reflect.ValueOf(&err).Elem(),
+			}
+		}
+		return []reflect.Value{
+			args[0],
+			reflect.Zero(reflect.TypeOf(new(error)).Elem()),
+		}
+	}
+	funcValue := reflect.MakeFunc(updateFnType, updateFuncBody)
+	updateFunction.Set(funcValue)
+}
+
+func MakeDeleteFunc(deleteFuncPointer interface{}, h *Harvest, path string, payloadType interface{}) {
+	deleteFunction := reflect.ValueOf(deleteFuncPointer).Elem()
+	deleteFnType := deleteFunction.Type()
+	zeroReturnValue := reflect.Zero(reflect.TypeOf(new(error)).Elem())
+	deleteFuncBody := func(args []reflect.Value) []reflect.Value {
+		id := args[0].Elem().FieldByName("Id").Int()
+		formattedPath := fmt.Sprintf(path, id)
+
+		response, err := h.ProcessRequest("DELETE", formattedPath, nil)
+		if err != nil {
+			return []reflect.Value{
+				reflect.ValueOf(&err).Elem(),
+			}
+		}
+		if response.StatusCode == 200 {
+			return []reflect.Value{
+				zeroReturnValue,
+			}
+		} else if response.StatusCode == 400 {
+			err = &ResponseError{&ErrorPayload{fmt.Sprintf("Entity not deleted: %d", id)}}
+			return []reflect.Value{
+				reflect.ValueOf(&err).Elem(),
+			}
+		} else {
+			panic(response.Status)
+		}
+	}
+	funcValue := reflect.MakeFunc(deleteFnType, deleteFuncBody)
+	deleteFunction.Set(funcValue)
 }

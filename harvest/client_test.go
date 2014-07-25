@@ -6,19 +6,7 @@ import (
 
 func TestFindAllClients(t *testing.T) {
 	client := createClient(t)
-	clients, err := client.Clients.All()
-	if err != nil {
-		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
-	}
-	if clients == nil {
-		t.Fatal("Expected clients not to be nil")
-	}
-	if len(clients) == 0 {
-		t.Fatal("Expected clients not to be empty")
-	}
-	for _, c := range clients {
-		t.Logf("Client: %+#v\n", c)
-	}
+	testAllFunc(client.Clients.All, nil, t)
 }
 
 func TestFindClient(t *testing.T) {
