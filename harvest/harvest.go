@@ -108,6 +108,7 @@ func (h *Harvest) Account() (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err

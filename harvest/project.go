@@ -85,6 +85,7 @@ func (p *ProjectsService) All() ([]*Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
@@ -114,6 +115,7 @@ func (p *ProjectsService) AllUpdatedSince(updatedSince time.Time) ([]*Project, e
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
@@ -135,6 +137,7 @@ func (p *ProjectsService) Find(id int) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode == 404 {
 		return nil, &ResponseError{&ErrorPayload{fmt.Sprintf("No project found for id %d", id)}}
 	}
@@ -159,6 +162,7 @@ func (p *ProjectsService) Create(project *Project) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode == 201 {
 		location := response.Header.Get("Location")
 		projectId := -1
@@ -189,6 +193,7 @@ func (p *ProjectsService) Delete(project *Project) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode == 200 {
 		return true, nil
 	} else if response.StatusCode == 400 {
@@ -207,6 +212,7 @@ func (p *ProjectsService) Update(project *Project) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode != 200 {
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
@@ -227,6 +233,7 @@ func (p *ProjectsService) Toggle(project *Project) error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 	if response.StatusCode == 200 {
 		return nil
 	} else if response.StatusCode == 400 {

@@ -55,6 +55,7 @@ func (s *UsersService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) 
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
@@ -76,6 +77,7 @@ func (s *UsersService) Find(id int) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode == 404 {
 		return nil, &ResponseError{&ErrorPayload{fmt.Sprintf("No user found with id %d", id)}}
 	}
@@ -100,6 +102,7 @@ func (s *UsersService) Create(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	location := response.Header.Get("Location")
 	userId := -1
 	fmt.Sscanf(location, "/people/%d", &userId)
@@ -140,6 +143,7 @@ func (s *UsersService) Update(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode != 200 {
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
@@ -160,6 +164,7 @@ func (s *UsersService) Delete(user *User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode == 200 {
 		return true, nil
 	} else if response.StatusCode == 400 {
@@ -174,6 +179,7 @@ func (s *UsersService) Toggle(user *User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode == 200 {
 		return true, nil
 	} else if response.StatusCode == 400 {

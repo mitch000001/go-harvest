@@ -106,6 +106,7 @@ func (c *ClientsService) Find(id int) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode == 404 {
 		return nil, &ResponseError{&ErrorPayload{fmt.Sprintf("No client found for id %d", id)}}
 	}

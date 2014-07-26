@@ -114,7 +114,7 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	// Wrong updates
-	user.FirstName = ""
+	user.Email = "hdhi6556"
 	updatedUser, err = client.Users.Update(user)
 	if err == nil {
 		t.Fatal("Expected ResponseError, got nil")
