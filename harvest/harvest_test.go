@@ -193,22 +193,11 @@ func TestApiAll(t *testing.T) {
 		Id:   12,
 		Data: "foobar",
 	}
-	testJson, err := json.Marshal(&testData)
-	if err != nil {
-		t.Logf("Got error: %v\n", err)
-		t.Fail()
-	}
-	payload := []*ApiPayload{
-		&ApiPayload{
-			Name:  "Test",
-			Value: testJson,
-		},
-	}
-	testClient.setResponsePayload(http.StatusOK, payload)
+	testClient.setResponsePayloadAsArray(http.StatusOK, testData)
 
 	var data []*testPayload
 
-	err = api.All(&data, nil)
+	err := api.All(&data, nil)
 
 	if err != nil {
 		t.Logf("Expected no error, got: %v", err)
@@ -255,20 +244,11 @@ func TestApiFind(t *testing.T) {
 		Id:   12,
 		Data: "foobar",
 	}
-	testJson, err := json.Marshal(&testData)
-	if err != nil {
-		t.Logf("Got error: %v\n", err)
-		t.Fail()
-	}
-	payload := &ApiPayload{
-		Name:  "Test",
-		Value: testJson,
-	}
-	testClient.setResponsePayload(http.StatusOK, payload)
+	testClient.setResponsePayload(http.StatusOK, testData)
 
 	var data *testPayload
 
-	err = api.Find(12, &data)
+	err := api.Find(12, &data)
 
 	if err != nil {
 		t.Logf("Expected no error, got: %v", err)
@@ -337,13 +317,41 @@ func (t *testHttpClient) Do(request *http.Request) (*http.Response, error) {
 	return t.testResponse, t.testError
 }
 
-func (t *testHttpClient) setResponsePayload(statusCode int, payload interface{}) {
-	fmt.Printf("payload: '%+#v'\n", payload)
+func (t *testHttpClient) setResponsePayload(statusCode int, data interface{}) {
+	testJson, err := json.Marshal(&data)
+	if err != nil {
+		panic(err)
+	}
+	payload := &ApiPayload{
+		Name:  "Test",
+		Value: testJson,
+	}
 	marshaled, err := json.Marshal(&payload)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Marshaled payload: '%s'\n", string(marshaled))
+	if t.testResponse == nil {
+		t.testResponse = &http.Response{}
+	}
+	t.testResponse.StatusCode = statusCode
+	t.testResponse.Body = ioutil.NopCloser(bytes.NewBuffer(marshaled))
+}
+
+func (t *testHttpClient) setResponsePayloadAsArray(statusCode int, data interface{}) {
+	testJson, err := json.Marshal(&data)
+	if err != nil {
+		panic(err)
+	}
+	payload := []*ApiPayload{
+		&ApiPayload{
+			Name:  "Test",
+			Value: testJson,
+		},
+	}
+	marshaled, err := json.Marshal(&payload)
+	if err != nil {
+		panic(err)
+	}
 	if t.testResponse == nil {
 		t.testResponse = &http.Response{}
 	}
