@@ -1,7 +1,17 @@
 package harvest
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
+	"reflect"
+	"sort"
+	"strings"
 	"testing"
 )
 
@@ -42,17 +52,6 @@ func createClient(t *testing.T) *Harvest {
 		t.Fatal("Expected client not to be nil")
 	}
 	return client
-}
-
-type testHttpClient struct {
-	testRequest  *http.Request
-	testResponse *http.Response
-	testError    error
-}
-
-func (t *testHttpClient) Do(request *http.Request) (*http.Response, error) {
-	t.testRequest = request
-	return t.testResponse, t.testError
 }
 
 func TestProcessRequest(t *testing.T) {
@@ -282,42 +281,16 @@ func TestApiAll(t *testing.T) {
 }
 
 func TestApiFind(t *testing.T) {
-	path := "foobar"
-	uri, _ := url.Parse("http://www.example.com")
-
 	testClient := &testHttpClient{}
-
-	client := func() HttpClient {
-		return testClient
-	}
-
-	api := Api{
-		baseUrl: uri,
-		path:    path,
-		Client:  client,
-	}
-
+	api := createTestApi(testClient)
 	testData := testPayload{
 		Id:   12,
 		Data: "foobar",
 	}
-	testJson, err := json.Marshal(&testData)
+	err := testClient.setResponsePayload(http.StatusOK, testData)
 	if err != nil {
 		t.Logf("Got error: %v\n", err)
 		t.Fail()
-	}
-	payload := ApiPayload{
-		Name:  "Test",
-		Value: testJson,
-	}
-	marshaled, err := json.Marshal(&payload)
-	if err != nil {
-		t.Logf("Expected no error, got: %v", err)
-		t.Fail()
-	}
-
-	testClient.testResponse = &http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer(marshaled)),
 	}
 
 	var data *testPayload
@@ -340,9 +313,10 @@ func TestApiFind(t *testing.T) {
 	}
 
 	// Testing nonexisting id
-	testClient.testResponse = &http.Response{
-		StatusCode: 404,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+	testClient.setResponseBody(http.StatusNotFound, ioutil.NopCloser(strings.NewReader("")))
+	if err != nil {
+		t.Logf("Got error: %v\n", err)
+		t.Fail()
 	}
 
 	data = nil
@@ -359,6 +333,64 @@ func TestApiFind(t *testing.T) {
 			t.Fail()
 		}
 	}
+}
+
+func TestApiCreate(t *testing.T) {
+
+}
+
+func createTestApi(client *testHttpClient) *Api {
+	path := "foobar"
+	uri, _ := url.Parse("http://www.example.com")
+	clientFunc := func() HttpClient {
+		return client
+	}
+	api := Api{
+		baseUrl: uri,
+		path:    path,
+		Client:  clientFunc,
+	}
+	return &api
+}
+
+type testHttpClient struct {
+	testRequest  *http.Request
+	testResponse *http.Response
+	testError    error
+}
+
+func (t *testHttpClient) Do(request *http.Request) (*http.Response, error) {
+	t.testRequest = request
+	return t.testResponse, t.testError
+}
+
+func (t *testHttpClient) setResponsePayload(statusCode int, data interface{}) error {
+	testJson, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	payload := ApiPayload{
+		Name:  "Test",
+		Value: testJson,
+	}
+	marshaled, err := json.Marshal(&payload)
+	if err != nil {
+		return err
+	}
+	if t.testResponse == nil {
+		t.testResponse = &http.Response{}
+	}
+	t.testResponse.StatusCode = statusCode
+	t.testResponse.Body = ioutil.NopCloser(bytes.NewBuffer(marshaled))
+	return nil
+}
+
+func (t *testHttpClient) setResponseBody(statusCode int, body io.ReadCloser) {
+	if t.testResponse == nil {
+		t.testResponse = &http.Response{}
+	}
+	t.testResponse.StatusCode = statusCode
+	t.testResponse.Body = body
 }
 
 type sortedBytes []byte
