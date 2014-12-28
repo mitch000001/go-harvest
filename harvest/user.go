@@ -1,4 +1,4 @@
-package main
+package harvest
 
 import (
 	"bytes"
@@ -103,9 +103,12 @@ func (s *UsersService) Create(user *User) (*User, error) {
 		return nil, err
 	}
 	defer response.Body.Close()
-	location := response.Header.Get("Location")
 	userId := -1
-	fmt.Sscanf(location, "/people/%d", &userId)
+	fmt.Printf("Headers: %+#v\n", response.Header)
+	if response.StatusCode == 201 {
+		location := response.Header.Get("Location")
+		fmt.Sscanf(location, "/people/%d", &userId)
+	}
 	if userId == -1 {
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {

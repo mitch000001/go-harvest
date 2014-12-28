@@ -1,4 +1,4 @@
-package main
+package harvest
 
 import (
 	"testing"
@@ -56,9 +56,9 @@ func TestFindUser(t *testing.T) {
 	}
 
 	// No user with that id
-	user, err = client.Users.Find(1)
+	user, err = client.Users.Find(-1)
 	if err != nil {
-		expectedErrorMessage := "No user found with id 1"
+		expectedErrorMessage := "No user found with id -1"
 		if err.Error() != expectedErrorMessage {
 			t.Fatalf("Expected ResponseError with message '%s', got error %T with message: %s\n", expectedErrorMessage, err, err.Error())
 		}

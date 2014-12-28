@@ -1,7 +1,6 @@
-package main
+package harvest
 
 import (
-	"code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"code.google.com/p/goauth2/oauth"
 )
 
 const basePathTemplate = "https://%s.harvestapp.com/"
@@ -25,16 +26,6 @@ func parseSubdomain(subdomain string) (*url.URL, error) {
 		subdomain = subdomain + "/"
 	}
 	return url.Parse(subdomain)
-}
-
-func main() {
-	uriBase, _ := parseSubdomain("foo")
-	uri, err := uriBase.Parse("/people")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Base: %s\n", uriBase)
-	fmt.Printf("Parsed: %s\n", uri)
 }
 
 type authenticationTransport interface {
@@ -74,6 +65,7 @@ func NewOAuthClient(subdomain string, config *oauth.Config) (*Harvest, error) {
 	return h, err
 }
 
+// Harvest defines the client for requests on the API
 type Harvest struct {
 	authenticationTransport
 	baseUrl  *url.URL // API endpoint base URL
