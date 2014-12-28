@@ -246,7 +246,7 @@ func (a *Api) All(data interface{}, params url.Values) error {
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(marshaled, data)
+	err = json.Unmarshal(marshaled, &data)
 	if err != nil {
 		return err
 	}

@@ -55,23 +55,13 @@ func createClient(t *testing.T) *Harvest {
 }
 
 func TestProcessRequest(t *testing.T) {
+	testClient := &testHttpClient{}
+	api := createTestApi(testClient)
+
+	path := "qux"
 	requestMethod := "GET"
 	bodyContent := []byte("BODY")
 	body := bytes.NewBuffer(bodyContent)
-	path := "foobar"
-	url, _ := url.Parse("http://www.example.com")
-
-	testClient := testHttpClient{}
-
-	client := func() HttpClient {
-		return &testClient
-	}
-
-	api := Api{
-		baseUrl: url,
-		path:    path,
-		Client:  client,
-	}
 
 	// Test
 	_, err := api.processRequest(requestMethod, path, body)
@@ -95,7 +85,7 @@ func TestProcessRequest(t *testing.T) {
 	}
 
 	requestUrl := testRequest.URL.String()
-	expectedUrl := url.String() + "/" + path
+	expectedUrl := api.baseUrl.String() + "/" + path
 
 	if requestUrl != expectedUrl {
 		t.Logf("Expected request to have URL '%s', got '%s'", expectedUrl, requestUrl)
@@ -196,20 +186,8 @@ func TestApiPayloadUnmarshalJSON(t *testing.T) {
 }
 
 func TestApiAll(t *testing.T) {
-	path := "foobar"
-	uri, _ := url.Parse("http://www.example.com")
-
 	testClient := &testHttpClient{}
-
-	client := func() HttpClient {
-		return testClient
-	}
-
-	api := Api{
-		baseUrl: uri,
-		path:    path,
-		Client:  client,
-	}
+	api := createTestApi(testClient)
 
 	testData := testPayload{
 		Id:   12,
@@ -226,15 +204,7 @@ func TestApiAll(t *testing.T) {
 			Value: testJson,
 		},
 	}
-	marshaled, err := json.Marshal(&payload)
-	if err != nil {
-		t.Logf("Expected no error, got: %v", err)
-		t.Fail()
-	}
-
-	testClient.testResponse = &http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer(marshaled)),
-	}
+	testClient.setResponsePayload(http.StatusOK, payload)
 
 	var data []*testPayload
 
@@ -261,9 +231,7 @@ func TestApiAll(t *testing.T) {
 	}
 
 	// Testing url query params
-	testClient.testResponse = &http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer([]byte{})),
-	}
+	testClient.setResponseBody(http.StatusOK, emptyReadCloser())
 
 	data = nil
 	params := url.Values{}
@@ -287,11 +255,16 @@ func TestApiFind(t *testing.T) {
 		Id:   12,
 		Data: "foobar",
 	}
-	err := testClient.setResponsePayload(http.StatusOK, testData)
+	testJson, err := json.Marshal(&testData)
 	if err != nil {
 		t.Logf("Got error: %v\n", err)
 		t.Fail()
 	}
+	payload := &ApiPayload{
+		Name:  "Test",
+		Value: testJson,
+	}
+	testClient.setResponsePayload(http.StatusOK, payload)
 
 	var data *testPayload
 
@@ -313,11 +286,7 @@ func TestApiFind(t *testing.T) {
 	}
 
 	// Testing nonexisting id
-	testClient.setResponseBody(http.StatusNotFound, ioutil.NopCloser(strings.NewReader("")))
-	if err != nil {
-		t.Logf("Got error: %v\n", err)
-		t.Fail()
-	}
+	testClient.setResponseBody(http.StatusNotFound, emptyReadCloser())
 
 	data = nil
 
@@ -353,6 +322,10 @@ func createTestApi(client *testHttpClient) *Api {
 	return &api
 }
 
+func emptyReadCloser() io.ReadCloser {
+	return ioutil.NopCloser(bytes.NewBuffer([]byte{}))
+}
+
 type testHttpClient struct {
 	testRequest  *http.Request
 	testResponse *http.Response
@@ -364,25 +337,18 @@ func (t *testHttpClient) Do(request *http.Request) (*http.Response, error) {
 	return t.testResponse, t.testError
 }
 
-func (t *testHttpClient) setResponsePayload(statusCode int, data interface{}) error {
-	testJson, err := json.Marshal(&data)
-	if err != nil {
-		return err
-	}
-	payload := ApiPayload{
-		Name:  "Test",
-		Value: testJson,
-	}
+func (t *testHttpClient) setResponsePayload(statusCode int, payload interface{}) {
+	fmt.Printf("payload: '%+#v'\n", payload)
 	marshaled, err := json.Marshal(&payload)
 	if err != nil {
-		return err
+		panic(err)
 	}
+	fmt.Printf("Marshaled payload: '%s'\n", string(marshaled))
 	if t.testResponse == nil {
 		t.testResponse = &http.Response{}
 	}
 	t.testResponse.StatusCode = statusCode
 	t.testResponse.Body = ioutil.NopCloser(bytes.NewBuffer(marshaled))
-	return nil
 }
 
 func (t *testHttpClient) setResponseBody(statusCode int, body io.ReadCloser) {
