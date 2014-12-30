@@ -11,7 +11,6 @@ import (
 	"os"
 	"reflect"
 	"sort"
-	"strings"
 	"testing"
 )
 
@@ -61,7 +60,7 @@ func TestProcessRequest(t *testing.T) {
 	path := "qux"
 	requestMethod := "GET"
 	bodyContent := []byte("BODY")
-	body := bytes.NewBuffer(bodyContent)
+	body := bytes.NewReader(bodyContent)
 
 	// Test
 	_, err := api.processRequest(requestMethod, path, body)
@@ -72,52 +71,31 @@ func TestProcessRequest(t *testing.T) {
 		t.Fail()
 	}
 
-	testRequest := testClient.testRequest
-
-	if testRequest == nil {
-		t.Log("Expected request not to be nil")
-		t.Fail()
+	expectedHeader := http.Header{
+		"Content-Type": []string{"application/json"},
+		"Accept":       []string{"application/json"},
 	}
 
-	if testRequest.Method != requestMethod {
-		t.Logf("Expected request to have method '%s', got '%s'", requestMethod, testRequest.Method)
-		t.Fail()
-	}
-
-	requestUrl := testRequest.URL.String()
-	expectedUrl := api.baseUrl.String() + "/" + path
-
-	if requestUrl != expectedUrl {
-		t.Logf("Expected request to have URL '%s', got '%s'", expectedUrl, requestUrl)
-		t.Fail()
-	}
-
-	expectedContentType := "application/json"
-	actualContentType := testRequest.Header.Get("Content-Type")
-
-	if actualContentType != expectedContentType {
-		t.Logf("Expected request to have Content-Type header set to '%s', got '%s'", expectedContentType, actualContentType)
-		t.Fail()
-	}
-
-	expectedAcceptHeader := "application/json"
-	actualAcceptHeader := testRequest.Header.Get("Accept")
-
-	if actualAcceptHeader != expectedAcceptHeader {
-		t.Logf("Expected request to have Accept header set to '%s', got '%s'", expectedAcceptHeader, actualAcceptHeader)
-		t.Fail()
-	}
-
-	actualBodyBytes, err := ioutil.ReadAll(testRequest.Body)
-	if err != nil {
-		t.Logf("Expected to get no error, got '%v'", err)
-		t.Fail()
-	}
-
-	if !bytes.Equal(actualBodyBytes, bodyContent) {
-		t.Logf("Expected request to have body '%s', got '%s'", string(bodyContent), string(actualBodyBytes))
-		t.Fail()
-	}
+	testClient.testRequestFor(t, map[string]interface{}{
+		"Method": requestMethod,
+		"URL":    panicErr(api.baseUrl.Parse(path)),
+		"Header": compare(expectedHeader, func(a, b interface{}) bool {
+			for k, _ := range a.(http.Header) {
+				expectedHeader := a.(http.Header).Get(k)
+				actualHeader := b.(http.Header).Get(k)
+				if !reflect.DeepEqual(expectedHeader, actualHeader) {
+					return false
+				}
+			}
+			return true
+		}),
+		"Body": compare(string(bodyContent), func(a, b interface{}) bool {
+			expectedContentBytes := []byte(a.(string))
+			actualBody := b.(io.Reader)
+			actualBodyBytes := panicErr(ioutil.ReadAll(actualBody)).([]byte)
+			return bytes.Equal(actualBodyBytes, expectedContentBytes)
+		}),
+	})
 }
 
 type testPayload struct {
@@ -244,7 +222,7 @@ func TestApiFind(t *testing.T) {
 		Id:   12,
 		Data: "foobar",
 	}
-	testClient.setResponsePayload(http.StatusOK, testData)
+	testClient.setResponsePayload(http.StatusOK, nil, testData)
 
 	var data *testPayload
 
@@ -317,7 +295,74 @@ func (t *testHttpClient) Do(request *http.Request) (*http.Response, error) {
 	return t.testResponse, t.testError
 }
 
-func (t *testHttpClient) setResponsePayload(statusCode int, data interface{}) {
+type compareTo interface {
+	// compareTo compares the inputs with the caller
+	compareTo(b interface{}) bool
+}
+
+type compareToWrapper struct {
+	data      interface{}
+	compareFn func(interface{}, interface{}) bool
+}
+
+func (c *compareToWrapper) compareTo(in interface{}) bool {
+	return c.compareFn(c.data, in)
+}
+
+func (c *compareToWrapper) GoString() string {
+	return fmt.Sprintf("%+#v", c.data)
+}
+
+func (c *compareToWrapper) String() string {
+	return fmt.Sprintf("%s", c.data)
+}
+
+func compare(data interface{}, compareFn func(interface{}, interface{}) bool) compareTo {
+	return &compareToWrapper{data: data, compareFn: compareFn}
+}
+
+func (t *testHttpClient) testRequestFor(tt *testing.T, testData map[string]interface{}) {
+	testRequest := t.testRequest
+	if testRequest == nil {
+		tt.Logf("Expected request not to be nil")
+		tt.Fail()
+	}
+	requestMap, err := structToMap(testRequest)
+	if err != nil {
+		tt.Logf("Expected no error, got: %v\n", err)
+		tt.FailNow()
+	}
+	for k, v := range testData {
+		reqValue := requestMap[k]
+		if comp, ok := v.(compareTo); ok {
+			if !comp.compareTo(reqValue) {
+				tt.Logf("Expected %s to equal '%+#v', got '%+#v'\n", k, v, reqValue)
+				tt.Fail()
+			}
+		} else {
+			if !reflect.DeepEqual(reqValue, v) {
+				tt.Logf("Expected %s to equal '%+#v', got '%+#v'\n", k, v, reqValue)
+				tt.Fail()
+			}
+		}
+	}
+}
+
+func structToMap(input interface{}) (map[string]interface{}, error) {
+	inputValue := reflect.Indirect(reflect.ValueOf(input))
+	if kind := inputValue.Kind(); kind != reflect.Struct {
+		return nil, fmt.Errorf("Can't turn %v into map\n", kind)
+	}
+	inputType := inputValue.Type()
+	output := make(map[string]interface{})
+	for i := 0; i < inputValue.NumField(); i++ {
+		fieldName := inputType.Field(i).Name
+		output[fieldName] = inputValue.Field(i).Interface()
+	}
+	return output, nil
+}
+
+func (t *testHttpClient) setResponsePayload(statusCode int, header http.Header, data interface{}) {
 	testJson, err := json.Marshal(&data)
 	if err != nil {
 		panic(err)
@@ -335,6 +380,7 @@ func (t *testHttpClient) setResponsePayload(statusCode int, data interface{}) {
 	}
 	t.testResponse.StatusCode = statusCode
 	t.testResponse.Body = ioutil.NopCloser(bytes.NewBuffer(marshaled))
+	t.testResponse.Header = header
 }
 
 func (t *testHttpClient) setResponsePayloadAsArray(statusCode int, data interface{}) {
@@ -365,6 +411,13 @@ func (t *testHttpClient) setResponseBody(statusCode int, body io.ReadCloser) {
 	}
 	t.testResponse.StatusCode = statusCode
 	t.testResponse.Body = body
+}
+
+func panicErr(input interface{}, err error) interface{} {
+	if err != nil {
+		panic(err)
+	}
+	return input
 }
 
 type sortedBytes []byte
