@@ -1,6 +1,7 @@
 package harvest
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"code.google.com/p/goauth2/oauth"
@@ -205,9 +207,6 @@ func (a *Api) processRequest(method string, path string, body io.Reader) (*http.
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
-	if err != nil {
-		return nil, err
-	}
 	response, err := a.Client().Do(request)
 	if err != nil {
 		return nil, err
@@ -256,7 +255,7 @@ func (a *Api) All(data interface{}, params url.Values) error {
 // Find gets the data specified by id
 // id is accepted as primitive data type or as type which implements
 // the fmt.Stringer interface
-func (a *Api) Find(id, data interface{}) error {
+func (a *Api) Find(id interface{}, data interface{}) error {
 	// TODO: It's nice to build "templates" for Sprintf, but it's not comprehensible
 	findTemplate := fmt.Sprintf("%s/%%%%%%c", a.path)
 	idVerb := 'v'
@@ -294,7 +293,50 @@ func (a *Api) Find(id, data interface{}) error {
 }
 
 func (a *Api) Create(data interface{}) error {
-	return errors.New("Not implemented yet")
+	marshaledData, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	requestPayload := []*ApiPayload{
+		&ApiPayload{
+			Name:  reflect.TypeOf(data).Elem().Name(),
+			Value: marshaledData,
+		},
+	}
+	marshaledPayload, err := json.Marshal(&requestPayload)
+	if err != nil {
+		panic(err)
+	}
+
+	response, err := a.processRequest("POST", a.path, bytes.NewReader(marshaledPayload))
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	id := -1
+	if response.StatusCode == 201 {
+		location := response.Header.Get("Location")
+		fmt.Printf("Location header: %s\n", location)
+		scanTemplate := fmt.Sprintf("/%s/%%d", a.path)
+		fmt.Sscanf(location, scanTemplate, &id)
+		if id == -1 {
+			return fmt.Errorf("Bad request!")
+		}
+		// TODO: ugly knowledge of internals from data
+		reflect.Indirect(reflect.ValueOf(data)).FieldByName("Id").SetInt(int64(id))
+		return nil
+	} else {
+		responseBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		apiResponse := ErrorPayload{}
+		err = json.Unmarshal(responseBytes, &apiResponse)
+		if err != nil {
+			return err
+		}
+		return &ResponseError{&apiResponse}
+	}
 }
 
 func (a *Api) Update(data interface{}) error {

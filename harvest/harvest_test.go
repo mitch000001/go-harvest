@@ -263,7 +263,26 @@ func TestApiFind(t *testing.T) {
 }
 
 func TestApiCreate(t *testing.T) {
+	testClient := &testHttpClient{}
+	api := createTestApi(testClient)
+	testData := testPayload{
+		Data: "foobar",
+	}
 
+	header := http.Header{"Location": []string{fmt.Sprintf("/%s/4", api.path)}}
+	testClient.setResponsePayload(http.StatusCreated, header, nil)
+
+	err := api.Create(&testData)
+
+	if err != nil {
+		t.Logf("Expected no error, got: %v", err)
+		t.Fail()
+	}
+
+	if testData.Id != 4 {
+		t.Logf("Expected data.Id to be %d, got: %d", 4, testData.Id)
+		t.Fail()
+	}
 }
 
 func createTestApi(client *testHttpClient) *Api {
