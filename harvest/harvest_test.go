@@ -14,14 +14,30 @@ import (
 )
 
 func TestParseSubdomain(t *testing.T) {
+	// Happy path
+	fullQualifiedSubdomain := "https://foo.harvestapp.com/"
+
+	testSubdomain(fullQualifiedSubdomain, t)
 	// only the subdomain name given
-	subdomain := "foo"
+	onlySubdomainName := "foo"
 
-	testSubdomain(subdomain, t)
+	testSubdomain(onlySubdomainName, t)
 
-	subdomain = "https://foo.harvestapp.com/"
+	fullQualifiedSubdomainWithoutTrailingSlash := "https://foo.harvestapp.com"
 
-	testSubdomain(subdomain, t)
+	testSubdomain(fullQualifiedSubdomainWithoutTrailingSlash, t)
+
+	// Invalid subdomains
+	noSubdomain := ""
+
+	testUrl, err := parseSubdomain(noSubdomain)
+	if err == nil {
+		t.Logf("Expected error, got nil. Resulting testUrl: '%+#v'\n", testUrl)
+		t.Fail()
+	}
+	if err != nil {
+
+	}
 }
 
 func testSubdomain(subdomain string, t *testing.T) {

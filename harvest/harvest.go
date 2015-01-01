@@ -15,6 +15,9 @@ import (
 
 const basePathTemplate = "https://%s.harvestapp.com/"
 
+// parseSubdomain parses the subdomain string and returns a fully qualifying URL.
+// It returns an error if the given string is the empty string or the string
+// can't be parsed as url.URL
 func parseSubdomain(subdomain string) (*url.URL, error) {
 	if subdomain == "" {
 		return nil, errors.New("Subdomain can't be blank")
