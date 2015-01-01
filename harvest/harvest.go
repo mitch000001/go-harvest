@@ -211,9 +211,11 @@ func (a *Api) processRequest(method string, path string, body io.Reader) (*http.
 	return response, nil
 }
 
-// All populates the data passed in with the results found at the API endpoint
+// All populates the data passed in with the results found at the API endpoint.
+//
 // data must be a slice of pointers to the resource corresponding with the
 // endpoint
+//
 // params contains additional query parameters and may be nil
 func (a *Api) All(data interface{}, params url.Values) error {
 	completePath := a.path
@@ -249,9 +251,10 @@ func (a *Api) All(data interface{}, params url.Values) error {
 	return nil
 }
 
-// Find gets the data specified by id
+// Find gets the data specified by id.
+//
 // id is accepted as primitive data type or as type which implements
-// the fmt.Stringer interface
+// the fmt.Stringer interface.
 func (a *Api) Find(id interface{}, data interface{}) error {
 	// TODO: It's nice to build "templates" for Sprintf, but it's not comprehensible
 	findTemplate := fmt.Sprintf("%s/%%%%%%c", a.path)
@@ -289,20 +292,19 @@ func (a *Api) Find(id interface{}, data interface{}) error {
 	return nil
 }
 
+// Create creates a new data entry at the API endpoint
 func (a *Api) Create(data interface{}) error {
 	marshaledData, err := json.Marshal(&data)
 	if err != nil {
 		return err
 	}
-	requestPayload := []*ApiPayload{
-		&ApiPayload{
-			Name:  reflect.TypeOf(data).Elem().Name(),
-			Value: marshaledData,
-		},
+	requestPayload := &ApiPayload{
+		Name:  reflect.TypeOf(data).Elem().Name(),
+		Value: marshaledData,
 	}
 	marshaledPayload, err := json.Marshal(&requestPayload)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	response, err := a.processRequest("POST", a.path, bytes.NewReader(marshaledPayload))
@@ -313,7 +315,6 @@ func (a *Api) Create(data interface{}) error {
 	id := -1
 	if response.StatusCode == 201 {
 		location := response.Header.Get("Location")
-		fmt.Printf("Location header: %s\n", location)
 		scanTemplate := fmt.Sprintf("/%s/%%d", a.path)
 		fmt.Sscanf(location, scanTemplate, &id)
 		if id == -1 {
@@ -336,10 +337,79 @@ func (a *Api) Create(data interface{}) error {
 	}
 }
 
+// Update updates the provided data at the API endpoint
 func (a *Api) Update(data interface{}) error {
-	return errors.New("Not implemented yet")
+	// TODO: ugly knowledge of internals from data
+	id := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Id").Int()
+	// TODO: It's nice to build "templates" for Sprintf, but it's not comprehensible
+	updateTemplate := fmt.Sprintf("%s/%%d", a.path)
+	marshaledData, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	requestPayload := &ApiPayload{
+		Name:  reflect.TypeOf(data).Elem().Name(),
+		Value: marshaledData,
+	}
+	marshaledPayload, err := json.Marshal(&requestPayload)
+	if err != nil {
+		return err
+	}
+	response, err := a.processRequest("PUT", fmt.Sprintf(updateTemplate, id), bytes.NewReader(marshaledPayload))
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		responseBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		apiResponse := ErrorPayload{}
+		err = json.Unmarshal(responseBytes, &apiResponse)
+		if err != nil {
+			return err
+		}
+		return &ResponseError{&apiResponse}
+	}
+	return nil
 }
 
+// Delete deletes the provided data at the API endpoint
 func (a *Api) Delete(data interface{}) error {
-	return errors.New("Not implemented yet")
+	// TODO: ugly knowledge of internals from data
+	id := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Id").Int()
+	// TODO: It's nice to build "templates" for Sprintf, but it's not comprehensible
+	deleteTemplate := fmt.Sprintf("%s/%%d", a.path)
+	marshaledData, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	requestPayload := &ApiPayload{
+		Name:  reflect.TypeOf(data).Elem().Name(),
+		Value: marshaledData,
+	}
+	marshaledPayload, err := json.Marshal(&requestPayload)
+	if err != nil {
+		return err
+	}
+
+	response, err := a.processRequest("DELETE", fmt.Sprintf(deleteTemplate, id), bytes.NewReader(marshaledPayload))
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		responseBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		apiResponse := ErrorPayload{}
+		err = json.Unmarshal(responseBytes, &apiResponse)
+		if err != nil {
+			return err
+		}
+		return &ResponseError{&apiResponse}
+	}
+	return nil
 }

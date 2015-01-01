@@ -286,7 +286,7 @@ func TestApiCreate(t *testing.T) {
 	}
 
 	// test invalid data
-	body := &ResponseError{&ErrorPayload{"FAIL"}}
+	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
 	response := &http.Response{
 		StatusCode: http.StatusBadRequest,
@@ -306,9 +306,127 @@ func TestApiCreate(t *testing.T) {
 		errorMessage := err.Error()
 		if expectedMessage != errorMessage {
 			t.Logf("Expected error message '%s', got '%s'\n", expectedMessage, errorMessage)
+			t.Fail()
 		}
 	}
+}
 
+func TestApiUpdate(t *testing.T) {
+	testClient := &testHttpClient{}
+	api := createTestApi(testClient)
+	testData := testPayload{
+		Id:   12,
+		Data: "foobar",
+	}
+
+	testClient.setResponsePayload(http.StatusOK, nil, nil)
+
+	err := api.Update(&testData)
+
+	if err != nil {
+		t.Logf("Expected no error, got: %v\n", err)
+		t.Fail()
+	}
+
+	request := testClient.testRequest
+	if request == nil {
+		t.Logf("Expected request not to be nil\n")
+		t.FailNow()
+	}
+	if request.Method != "PUT" {
+		t.Logf("Expected request method to be 'PUT', got '%s'\n", request.Method)
+		t.Fail()
+	}
+	requestBodyBytes := panicErr(ioutil.ReadAll(request.Body)).([]byte)
+	expectedBytes := []byte(`{"testPayload":{"Id":12,"Data":"foobar"}}`)
+	if !bytes.Equal(expectedBytes, requestBodyBytes) {
+		t.Logf("Expected request body to equal '%s', got '%s'\n", string(expectedBytes), string(requestBodyBytes))
+		t.Fail()
+	}
+
+	// Failing update
+	body := &ErrorPayload{Message: "FAIL"}
+	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
+	response := &http.Response{
+		StatusCode: http.StatusBadRequest,
+		Body:       bytesToReadCloser(bodyBytes),
+	}
+	testClient.testResponse = response
+
+	err = api.Update(&testData)
+
+	if err == nil {
+		t.Logf("Expected an error, got nil\n")
+		t.Fail()
+	}
+
+	if err != nil {
+		expectedMessage := "FAIL"
+		errorMessage := err.Error()
+		if expectedMessage != errorMessage {
+			t.Logf("Expected error message '%s', got '%s'\n", expectedMessage, errorMessage)
+			t.Fail()
+		}
+	}
+}
+
+func TestApiDelete(t *testing.T) {
+	testClient := &testHttpClient{}
+	api := createTestApi(testClient)
+	testData := testPayload{
+		Id:   12,
+		Data: "foobar",
+	}
+
+	testClient.setResponsePayload(http.StatusOK, nil, nil)
+
+	err := api.Delete(&testData)
+
+	if err != nil {
+		t.Logf("Expected no error, got: %v\n", err)
+		t.Fail()
+	}
+
+	request := testClient.testRequest
+	if request == nil {
+		t.Logf("Expected request not to be nil\n")
+		t.FailNow()
+	}
+	if request.Method != "DELETE" {
+		t.Logf("Expected request method to be 'DELETE', got '%s'\n", request.Method)
+		t.Fail()
+	}
+	requestBodyBytes := panicErr(ioutil.ReadAll(request.Body)).([]byte)
+	expectedBytes := []byte(`{"testPayload":{"Id":12,"Data":"foobar"}}`)
+	if !bytes.Equal(expectedBytes, requestBodyBytes) {
+		t.Logf("Expected request body to equal '%s', got '%s'\n", string(expectedBytes), string(requestBodyBytes))
+		t.Fail()
+	}
+
+	// Failing delete
+	body := &ErrorPayload{Message: "FAIL"}
+	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
+	response := &http.Response{
+		StatusCode: http.StatusBadRequest,
+		Body:       bytesToReadCloser(bodyBytes),
+	}
+	testClient.testResponse = response
+
+	err = api.Delete(&testData)
+
+	if err == nil {
+		t.Logf("Expected an error, got nil\n")
+		t.Fail()
+	}
+
+	if err != nil {
+		expectedMessage := "FAIL"
+		errorMessage := err.Error()
+		if expectedMessage != errorMessage {
+			t.Logf("Expected error message '%s', got '%s'\n", expectedMessage, errorMessage)
+			t.Fail()
+		}
+	}
 }
 
 func createTestApi(client *testHttpClient) *Api {
