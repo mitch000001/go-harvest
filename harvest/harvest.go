@@ -11,8 +11,6 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
-
-	"code.google.com/p/goauth2/oauth"
 )
 
 const basePathTemplate = "https://%s.harvestapp.com/"
@@ -30,46 +28,46 @@ func parseSubdomain(subdomain string) (*url.URL, error) {
 	return url.Parse(subdomain)
 }
 
-type authenticationTransport interface {
-	Client() *http.Client
+// HttpClientProvider yields a function to provide an HttpClient.
+type HttpClientProvider interface {
+	// Client returns an HttpClient, which defined the minimal interface
+	// of a http client usable by the harvest client to process http request
+	Client() HttpClient
 }
 
-// newHarvest creates a new Client for the provided subdomain
-func newHarvest(subdomain string) (*Harvest, error) {
+// HttpClient is the minimal interface which is used by the harvest client.
+type HttpClient interface {
+	// Do accepts an *http.Request and processes it
+	//
+	// See http.Client for a possible implementation
+	Do(*http.Request) (*http.Response, error)
+}
+
+// NewHarvest creates a new Client
+//
+// The subdomain must either be only the subdomain or the fully qualified url.
+// The clientProvider is a function providing the HttpClient used by the client.
+//
+// It returns an error if the subdomain does not satisfy the above mentioned specification
+// or if the URL parsed from the subdomain string is not valid.
+func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, error) {
 	baseUrl, err := parseSubdomain(subdomain)
 	if err != nil {
 		return nil, err
 	}
-	h := &Harvest{baseUrl: baseUrl}
+	h := &Harvest{
+		baseUrl: baseUrl,
+		api:     &Api{Client: clientProvider.Client},
+	}
 	h.Users = NewUsersService(h)
 	h.Projects = NewProjectsService(h)
 	h.Clients = NewClientsService(h)
 	return h, nil
 }
 
-// NewBasicAuthClient creates a new Client with BasicAuth as authentication method
-func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*Harvest, error) {
-	h, err := newHarvest(subdomain)
-	if err != nil {
-		return nil, err
-	}
-	h.authenticationTransport = &Transport{Config: config}
-	return h, nil
-}
-
-// NewOAuthClient creates a new Client with OAuth as authentication method
-func NewOAuthClient(subdomain string, config *oauth.Config) (*Harvest, error) {
-	h, err := newHarvest(subdomain)
-	if err != nil {
-		return nil, err
-	}
-	h.authenticationTransport = &oauth.Transport{Config: config}
-	return h, err
-}
-
 // Harvest defines the client for requests on the API
 type Harvest struct {
-	authenticationTransport
+	api      *Api
 	baseUrl  *url.URL // API endpoint base URL
 	Users    *UsersService
 	Projects *ProjectsService
@@ -90,7 +88,7 @@ func (h *Harvest) ProcessRequest(method string, path string, body io.Reader) (*h
 	if err != nil {
 		return nil, err
 	}
-	response, err := h.Client().Do(request)
+	response, err := h.api.Client().Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -184,10 +182,6 @@ func (a *ApiPayload) UnmarshalJSON(data []byte) error {
 	}
 	a.Value = raw
 	return nil
-}
-
-type HttpClient interface {
-	Do(*http.Request) (*http.Response, error)
 }
 
 type Api struct {
