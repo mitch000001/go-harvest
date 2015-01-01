@@ -1,4 +1,4 @@
-package harvest
+package main
 
 import (
 	"net/http"

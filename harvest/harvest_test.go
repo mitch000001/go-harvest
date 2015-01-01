@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"reflect"
 	"sort"
 	"testing"
@@ -33,24 +32,10 @@ func testSubdomain(subdomain string, t *testing.T) {
 	if testUrl == nil {
 		t.Fatal("Expected url not to be nil")
 	}
-	if testUrl.String() != "https://foo.harvestapp.com/" {
-		t.Fatalf("Expected schema to equal 'https://foo.harvestapp.com/', got '%s'", testUrl)
+	expectedUrl := "https://foo.harvestapp.com/"
+	if testUrl.String() != expectedUrl {
+		t.Fatalf("Expected schema to equal '%s', got '%s'", expectedUrl, testUrl)
 	}
-}
-
-func createClient(t *testing.T) *Harvest {
-	subdomain := os.Getenv("HARVEST_SUBDOMAIN")
-	username := os.Getenv("HARVEST_USERNAME")
-	password := os.Getenv("HARVEST_PASSWORD")
-
-	client, err := NewBasicAuthClient(subdomain, &BasicAuthConfig{username, password})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if client == nil {
-		t.Fatal("Expected client not to be nil")
-	}
-	return client
 }
 
 func TestProcessRequest(t *testing.T) {
