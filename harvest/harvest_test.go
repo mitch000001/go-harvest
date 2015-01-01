@@ -276,14 +276,39 @@ func TestApiCreate(t *testing.T) {
 	err := api.Create(&testData)
 
 	if err != nil {
-		t.Logf("Expected no error, got: %v", err)
+		t.Logf("Expected no error, got: %v\n", err)
 		t.Fail()
 	}
 
 	if testData.Id != 4 {
-		t.Logf("Expected data.Id to be %d, got: %d", 4, testData.Id)
+		t.Logf("Expected data.Id to be %d, got: %d\n", 4, testData.Id)
 		t.Fail()
 	}
+
+	// test invalid data
+	body := &ResponseError{&ErrorPayload{"FAIL"}}
+	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
+	response := &http.Response{
+		StatusCode: http.StatusBadRequest,
+		Body:       bytesToReadCloser(bodyBytes),
+	}
+	testClient.testResponse = response
+
+	err = api.Create(&testData)
+
+	if err == nil {
+		t.Logf("Expected an error, got nil\n")
+		t.Fail()
+	}
+
+	if err != nil {
+		expectedMessage := "FAIL"
+		errorMessage := err.Error()
+		if expectedMessage != errorMessage {
+			t.Logf("Expected error message '%s', got '%s'\n", expectedMessage, errorMessage)
+		}
+	}
+
 }
 
 func createTestApi(client *testHttpClient) *Api {
@@ -300,8 +325,12 @@ func createTestApi(client *testHttpClient) *Api {
 	return &api
 }
 
+func bytesToReadCloser(data []byte) io.ReadCloser {
+	return ioutil.NopCloser(bytes.NewReader(data))
+}
+
 func emptyReadCloser() io.ReadCloser {
-	return ioutil.NopCloser(bytes.NewBuffer([]byte{}))
+	return ioutil.NopCloser(bytes.NewReader([]byte{}))
 }
 
 type testHttpClient struct {
