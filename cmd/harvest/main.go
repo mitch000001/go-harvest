@@ -31,21 +31,21 @@ func NewOAuthClient(subdomain string, config *oauth.Config) (*harvest.Harvest, e
 	return h, err
 }
 
-type clientFunc func() *http.Client
+type clientProviderFunc func() *http.Client
 
-func (cf clientFunc) Client() harvest.HttpClient {
+func (cf clientProviderFunc) Client() harvest.HttpClient {
 	return cf()
 }
 
 type clientProviderWrapper struct {
-	clientFunc clientFunc
+	clientProviderFunc clientProviderFunc
 }
 
 func (cw *clientProviderWrapper) Client() harvest.HttpClient {
-	return cw.clientFunc()
+	return cw.clientProviderFunc()
 }
 
-func BuildClientProvider(f func() *http.Client) harvest.HttpClientProvider {
-	wrapper := &clientProviderWrapper{clientFunc: f}
+func BuildClientProvider(f clientProviderFunc) harvest.HttpClientProvider {
+	wrapper := &clientProviderWrapper{clientProviderFunc: f}
 	return wrapper
 }
