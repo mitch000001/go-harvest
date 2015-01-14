@@ -53,6 +53,37 @@ func testSubdomain(subdomain string, t *testing.T) {
 	}
 }
 
+func TestNewHarvest(t *testing.T) {
+	testClient := &testHttpClient{}
+	testClientProvider := &testHttpClientProvider{testClient}
+	client, err := NewHarvest("foo", testClientProvider)
+
+	if err != nil {
+		t.Logf("Expected no error, got %v\n", err)
+		t.Fail()
+	}
+
+	if client == nil {
+		t.Logf("Expected returning client not to be nil\n")
+		t.FailNow()
+	}
+
+	if client.Users == nil {
+		t.Logf("Expected users service not to be nil")
+		t.Fail()
+	}
+
+	if client.Projects == nil {
+		t.Logf("Expected projects service not to be nil")
+		t.Fail()
+	}
+
+	if client.Clients == nil {
+		t.Logf("Expected clients service not to be nil")
+		t.Fail()
+	}
+}
+
 func TestProcessRequest(t *testing.T) {
 	testClient := &testHttpClient{}
 	api := createJsonTestApi(testClient)
@@ -161,6 +192,14 @@ func TestJsonApiPayloadUnmarshalJSON(t *testing.T) {
 		t.Logf("Expected value to equal '%s', got '%s'", string(expectedValue), string(payload.Value))
 		t.Fail()
 	}
+}
+
+type testHttpClientProvider struct {
+	testClient *testHttpClient
+}
+
+func (cp *testHttpClientProvider) Client() HttpClient {
+	return cp.testClient
 }
 
 type testHttpClient struct {
