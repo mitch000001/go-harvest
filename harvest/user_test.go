@@ -72,6 +72,11 @@ func TestUserServiceCalls(t *testing.T) {
 		service := NewUserService(api)
 		serviceValue := reflect.ValueOf(service)
 		testFn := serviceValue.MethodByName(test.apiFn)
+		if !testFn.IsValid() {
+			t.Logf("Expected service to have method '%s', had not.\n", test.apiFn)
+			t.FailNow()
+		}
+
 		var args []reflect.Value
 		for _, v := range test.args {
 			args = append(args, reflect.ValueOf(v))
