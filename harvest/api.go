@@ -14,13 +14,13 @@ import (
 type CrudApi interface {
 	All(interface{}, url.Values) error
 	Find(interface{}, interface{}, url.Values) error
-	Create(interface{}) error
-	Update(interface{}) error
-	Delete(interface{}) error
+	Create(CrudModel) error
+	Update(CrudModel) error
+	Delete(CrudModel) error
 }
 
 type Toggler interface {
-	Toggle(ActiveToggler) error
+	Toggle(ActiveTogglerCrudModel) error
 }
 
 type CrudTogglerApi interface {
@@ -32,6 +32,16 @@ type ActiveToggler interface {
 	// Implementations of ToggleActive should toggle their active state and
 	// return the current status
 	ToggleActive() bool
+}
+
+type CrudModel interface {
+	Id() int
+	SetId(int)
+}
+
+type ActiveTogglerCrudModel interface {
+	ActiveToggler
+	CrudModel
 }
 
 type JsonApiPayload struct {
@@ -174,7 +184,7 @@ func (a *JsonApi) Find(id interface{}, data interface{}, params url.Values) erro
 }
 
 // Create creates a new data entry at the API endpoint
-func (a *JsonApi) Create(data interface{}) error {
+func (a *JsonApi) Create(data CrudModel) error {
 	marshaledData, err := json.Marshal(&data)
 	if err != nil {
 		return err
@@ -201,8 +211,7 @@ func (a *JsonApi) Create(data interface{}) error {
 		if id == -1 {
 			return fmt.Errorf("Bad request!")
 		}
-		// TODO: ugly knowledge of internals from data
-		reflect.Indirect(reflect.ValueOf(data)).FieldByName("Id").SetInt(int64(id))
+		data.SetId(id)
 		return nil
 	} else {
 		responseBytes, err := ioutil.ReadAll(response.Body)
@@ -219,9 +228,8 @@ func (a *JsonApi) Create(data interface{}) error {
 }
 
 // Update updates the provided data at the API endpoint
-func (a *JsonApi) Update(data interface{}) error {
-	// TODO: ugly knowledge of internals from data
-	id := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Id").Int()
+func (a *JsonApi) Update(data CrudModel) error {
+	id := data.Id()
 	// TODO: It's nice to build "templates" for Sprintf, but it's not comprehensible
 	updateTemplate := fmt.Sprintf("%s/%%d", a.path)
 	marshaledData, err := json.Marshal(&data)
@@ -257,9 +265,8 @@ func (a *JsonApi) Update(data interface{}) error {
 }
 
 // Delete deletes the provided data at the API endpoint
-func (a *JsonApi) Delete(data interface{}) error {
-	// TODO: ugly knowledge of internals from data
-	id := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Id").Int()
+func (a *JsonApi) Delete(data CrudModel) error {
+	id := data.Id()
 	// TODO: It's nice to build "templates" for Sprintf, but it's not comprehensible
 	deleteTemplate := fmt.Sprintf("%s/%%d", a.path)
 	marshaledData, err := json.Marshal(&data)
@@ -295,9 +302,8 @@ func (a *JsonApi) Delete(data interface{}) error {
 	return nil
 }
 
-func (a *JsonApi) Toggle(data ActiveToggler) error {
-	// TODO: ugly knowledge of internals from data
-	id := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Id").Int()
+func (a *JsonApi) Toggle(data ActiveTogglerCrudModel) error {
+	id := data.Id()
 	// TODO: It's nice to build "templates" for Sprintf, but it's not comprehensible
 	toggleTemplate := fmt.Sprintf("%s/%%d", a.path)
 	marshaledData, err := json.Marshal(&data)

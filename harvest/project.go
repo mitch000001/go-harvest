@@ -38,7 +38,7 @@ func (date *ShortDate) UnmarshalJSON(data []byte) error {
 
 type Project struct {
 	Name     string `json:"name,omitempty"`
-	Id       int    `json:"id,omitempty"`
+	ID       int    `json:"id,omitempty"`
 	ClientId int    `json:"client_id,omitempty"`
 	Code     string `json:"code,omitempty"`
 	Active   bool   `json:"active,omitempty"`
@@ -67,6 +67,14 @@ type Project struct {
 	are useful to constructing a full project timeline. */
 	HintEarliestRecordAt ShortDate `json:"hint_earliest_record_at,omitempty"`
 	HintLatestRecordAt   ShortDate `json:"hint_latest_record_at,omitempty"`
+}
+
+func (p *Project) Id() int {
+	return p.ID
+}
+
+func (p *Project) SetId(id int) {
+	p.ID = id
 }
 
 func (p *Project) ToggleActive() bool {
@@ -177,7 +185,7 @@ func (p *ProjectsService) Create(project *Project) (*Project, error) {
 		if projectId == -1 {
 			return nil, &ResponseError{&ErrorPayload{"No id for project received"}}
 		}
-		project.Id = projectId
+		project.SetId(projectId)
 		return project, nil
 	}
 	if response.StatusCode == 200 {

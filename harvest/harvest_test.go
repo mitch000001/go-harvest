@@ -130,13 +130,21 @@ func TestProcessRequest(t *testing.T) {
 }
 
 type testPayload struct {
-	Id   int
+	ID   int
 	Data string
+}
+
+func (t *testPayload) Id() int {
+	return t.ID
+}
+
+func (t *testPayload) SetId(id int) {
+	t.ID = id
 }
 
 func TestJsonApiPayloadMarshalJSON(t *testing.T) {
 	testData := testPayload{
-		Id:   12,
+		ID:   12,
 		Data: "foobar",
 	}
 	testJson, err := json.Marshal(&testData)
@@ -156,7 +164,7 @@ func TestJsonApiPayloadMarshalJSON(t *testing.T) {
 		t.Logf("Expected no error, got: %v", err)
 	}
 
-	expected := `{"Test":{"Id":12,"Data":"foobar"}}`
+	expected := `{"Test":{"ID":12,"Data":"foobar"}}`
 
 	if string(marshaled) != expected {
 		t.Fail()
@@ -166,7 +174,7 @@ func TestJsonApiPayloadMarshalJSON(t *testing.T) {
 }
 
 func TestJsonApiPayloadUnmarshalJSON(t *testing.T) {
-	testJson := `{"Test":{"Id":12,"Data":"foobar"}}`
+	testJson := `{"Test":{"ID":12,"Data":"foobar"}}`
 	var payload JsonApiPayload
 
 	err := json.Unmarshal([]byte(testJson), &payload)
@@ -184,7 +192,7 @@ func TestJsonApiPayloadUnmarshalJSON(t *testing.T) {
 		t.Logf("Expected unmarshaled JSON to equal '%s', got '%s'", expected, actual)
 	}
 
-	expectedValue := []byte(`{"Id":12,"Data":"foobar"}`)
+	expectedValue := []byte(`{"ID":12,"Data":"foobar"}`)
 	sort.Sort(sortedBytes(expectedValue))
 	sort.Sort(sortedBytes(payload.Value))
 

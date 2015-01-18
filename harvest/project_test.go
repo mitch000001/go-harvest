@@ -2,6 +2,38 @@ package harvest
 
 import "testing"
 
+func TestProjectSetId(t *testing.T) {
+	project := &Project{}
+
+	if project.ID != 0 {
+		t.Logf("Expected id to be 0, got %d\n", project.ID)
+		t.Fail()
+	}
+
+	project.SetId(12)
+
+	if project.ID != 12 {
+		t.Logf("Expected id to be 12, got %d\n", project.ID)
+		t.Fail()
+	}
+}
+
+func TestProjectId(t *testing.T) {
+	project := &Project{}
+
+	if project.Id() != 0 {
+		t.Logf("Expected id to be 0, got %d\n", project.ID)
+		t.Fail()
+	}
+
+	project.ID = 12
+
+	if project.Id() != 12 {
+		t.Logf("Expected id to be 12, got %d\n", project.ID)
+		t.Fail()
+	}
+}
+
 func TestProjectToggleActive(t *testing.T) {
 	project := &Project{
 		Active: true,

@@ -2,6 +2,38 @@ package harvest
 
 import "testing"
 
+func TestUserSetId(t *testing.T) {
+	user := &User{}
+
+	if user.ID != 0 {
+		t.Logf("Expected id to be 0, got %d\n", user.ID)
+		t.Fail()
+	}
+
+	user.SetId(12)
+
+	if user.ID != 12 {
+		t.Logf("Expected id to be 12, got %d\n", user.ID)
+		t.Fail()
+	}
+}
+
+func TestUserId(t *testing.T) {
+	user := &User{}
+
+	if user.Id() != 0 {
+		t.Logf("Expected id to be 0, got %d\n", user.ID)
+		t.Fail()
+	}
+
+	user.ID = 12
+
+	if user.Id() != 12 {
+		t.Logf("Expected id to be 12, got %d\n", user.ID)
+		t.Fail()
+	}
+}
+
 func TestUserToggleActive(t *testing.T) {
 	user := &User{
 		IsActive: true,

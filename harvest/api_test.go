@@ -17,7 +17,7 @@ func TestJsonApiAll(t *testing.T) {
 	api := createJsonTestApi(testClient)
 
 	testData := testPayload{
-		Id:   12,
+		ID:   12,
 		Data: "foobar",
 	}
 	testClient.setResponsePayloadAsArray(http.StatusOK, testData)
@@ -68,7 +68,7 @@ func TestJsonApiFind(t *testing.T) {
 	testClient := &testHttpClient{}
 	api := createJsonTestApi(testClient)
 	testData := testPayload{
-		Id:   12,
+		ID:   12,
 		Data: "foobar",
 	}
 	testClient.setResponsePayload(http.StatusOK, nil, testData)
@@ -144,8 +144,8 @@ func TestJsonApiCreate(t *testing.T) {
 		t.Fail()
 	}
 
-	if testData.Id != 4 {
-		t.Logf("Expected data.Id to be %d, got: %d\n", 4, testData.Id)
+	if testData.ID != 4 {
+		t.Logf("Expected data.id to be %d, got: %d\n", 4, testData.ID)
 		t.Fail()
 	}
 
@@ -179,7 +179,7 @@ func TestJsonApiUpdate(t *testing.T) {
 	testClient := &testHttpClient{}
 	api := createJsonTestApi(testClient)
 	testData := testPayload{
-		Id:   12,
+		ID:   12,
 		Data: "foobar",
 	}
 
@@ -202,7 +202,7 @@ func TestJsonApiUpdate(t *testing.T) {
 		t.Fail()
 	}
 	requestBodyBytes := panicErr(ioutil.ReadAll(request.Body)).([]byte)
-	expectedBytes := []byte(`{"testPayload":{"Id":12,"Data":"foobar"}}`)
+	expectedBytes := []byte(`{"testPayload":{"ID":12,"Data":"foobar"}}`)
 	if !bytes.Equal(expectedBytes, requestBodyBytes) {
 		t.Logf("Expected request body to equal '%s', got '%s'\n", string(expectedBytes), string(requestBodyBytes))
 		t.Fail()
@@ -238,7 +238,7 @@ func TestJsonApiDelete(t *testing.T) {
 	testClient := &testHttpClient{}
 	api := createJsonTestApi(testClient)
 	testData := testPayload{
-		Id:   12,
+		ID:   12,
 		Data: "foobar",
 	}
 
@@ -261,7 +261,7 @@ func TestJsonApiDelete(t *testing.T) {
 		t.Fail()
 	}
 	requestBodyBytes := panicErr(ioutil.ReadAll(request.Body)).([]byte)
-	expectedBytes := []byte(`{"testPayload":{"Id":12,"Data":"foobar"}}`)
+	expectedBytes := []byte(`{"testPayload":{"ID":12,"Data":"foobar"}}`)
 	if !bytes.Equal(expectedBytes, requestBodyBytes) {
 		t.Logf("Expected request body to equal '%s', got '%s'\n", string(expectedBytes), string(requestBodyBytes))
 		t.Fail()
@@ -308,7 +308,7 @@ func TestJsonApiToggle(t *testing.T) {
 	api := createJsonTestApi(testClient)
 	testData := toggleableTestPayload{
 		testPayload: &testPayload{
-			Id:   12,
+			ID:   12,
 			Data: "foobar",
 		},
 		IsActive: true,
@@ -333,7 +333,7 @@ func TestJsonApiToggle(t *testing.T) {
 		t.Fail()
 	}
 	requestBodyBytes := panicErr(ioutil.ReadAll(request.Body)).([]byte)
-	expectedBytes := []byte(`{"toggleableTestPayload":{"Id":12,"Data":"foobar","IsActive":true}}`)
+	expectedBytes := []byte(`{"toggleableTestPayload":{"ID":12,"Data":"foobar","IsActive":true}}`)
 	if !bytes.Equal(expectedBytes, requestBodyBytes) {
 		t.Logf("Expected request body to equal '%s', got '%s'\n", string(expectedBytes), string(requestBodyBytes))
 		t.Fail()
@@ -451,7 +451,7 @@ func testApiFindWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerA
 }
 
 func testApiCreateWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
-	testFn := func(data interface{}) error {
+	testFn := func(data CrudModel) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
 		if !reflect.DeepEqual(dataType, testData.expectedDataType) {
@@ -464,7 +464,7 @@ func testApiCreateWrapper(testData *apiWrapperTestData, called *bool) CrudToggle
 }
 
 func testApiUpdateWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
-	testFn := func(data interface{}) error {
+	testFn := func(data CrudModel) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
 		if !reflect.DeepEqual(dataType, testData.expectedDataType) {
@@ -477,7 +477,7 @@ func testApiUpdateWrapper(testData *apiWrapperTestData, called *bool) CrudToggle
 }
 
 func testApiDeleteWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
-	testFn := func(data interface{}) error {
+	testFn := func(data CrudModel) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
 		if !reflect.DeepEqual(dataType, testData.expectedDataType) {
@@ -490,7 +490,7 @@ func testApiDeleteWrapper(testData *apiWrapperTestData, called *bool) CrudToggle
 }
 
 func testApiToggleWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
-	testFn := func(data ActiveToggler) error {
+	testFn := func(data ActiveTogglerCrudModel) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
 		if !reflect.DeepEqual(dataType, testData.expectedDataType) {
@@ -510,29 +510,29 @@ func testApiFind(fn func(interface{}, interface{}, url.Values) error) CrudToggle
 	return &testApi{findFn: fn}
 }
 
-func testApiCreate(fn func(interface{}) error) CrudTogglerApi {
+func testApiCreate(fn func(CrudModel) error) CrudTogglerApi {
 	return &testApi{createFn: fn}
 }
 
-func testApiUpdate(fn func(interface{}) error) CrudTogglerApi {
+func testApiUpdate(fn func(CrudModel) error) CrudTogglerApi {
 	return &testApi{updateFn: fn}
 }
 
-func testApiDelete(fn func(interface{}) error) CrudTogglerApi {
+func testApiDelete(fn func(CrudModel) error) CrudTogglerApi {
 	return &testApi{deleteFn: fn}
 }
 
-func testApiToggle(fn func(ActiveToggler) error) CrudTogglerApi {
+func testApiToggle(fn func(ActiveTogglerCrudModel) error) CrudTogglerApi {
 	return &testApi{toggleFn: fn}
 }
 
 type testApi struct {
 	allFn    func(interface{}, url.Values) error
 	findFn   func(interface{}, interface{}, url.Values) error
-	createFn func(interface{}) error
-	updateFn func(interface{}) error
-	deleteFn func(interface{}) error
-	toggleFn func(ActiveToggler) error
+	createFn func(CrudModel) error
+	updateFn func(CrudModel) error
+	deleteFn func(CrudModel) error
+	toggleFn func(ActiveTogglerCrudModel) error
 }
 
 func (t *testApi) All(data interface{}, params url.Values) error {
@@ -543,18 +543,18 @@ func (t *testApi) Find(id, data interface{}, params url.Values) error {
 	return t.findFn(id, data, params)
 }
 
-func (t *testApi) Create(data interface{}) error {
+func (t *testApi) Create(data CrudModel) error {
 	return t.createFn(data)
 }
 
-func (t *testApi) Update(data interface{}) error {
+func (t *testApi) Update(data CrudModel) error {
 	return t.updateFn(data)
 }
 
-func (t *testApi) Delete(data interface{}) error {
+func (t *testApi) Delete(data CrudModel) error {
 	return t.deleteFn(data)
 }
 
-func (t *testApi) Toggle(data ActiveToggler) error {
+func (t *testApi) Toggle(data ActiveTogglerCrudModel) error {
 	return t.toggleFn(data)
 }

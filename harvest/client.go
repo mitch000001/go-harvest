@@ -14,7 +14,7 @@ type Client struct {
 	CreatedAt               time.Time `json"created-at,omitempty"`
 	UpdatedAt               time.Time `json"updated-at,omitempty"`
 	HighriseId              int       `json:"highrise-id,omitempty"`
-	Id                      int       `json:"id,omitempty"`
+	ID                      int       `json:"id,omitempty"`
 	CacheVersion            int       `json:"cache-version,omitempty"`
 	Currency                string    `json:"currency,omitempty"`
 	CurrencySymbol          string    `json:"currency-symbol,omitempty"`
@@ -22,6 +22,14 @@ type Client struct {
 	Details                 string    `json:"details,omitempty"`
 	DefaultInvoiceTimeframe Timeframe `json:"default-invoice-timeframe,omitempty"`
 	LastInvoiceKind         string    `json:"last-invoice-kind,omitempty"`
+}
+
+func (c *Client) Id() int {
+	return c.ID
+}
+
+func (c *Client) SetId(id int) {
+	c.ID = id
 }
 
 func (c *Client) ToggleActive() bool {
