@@ -9,43 +9,7 @@ import (
 	"time"
 )
 
-type UsersService struct {
-	h *Harvest
-}
-
-func NewUsersService(client *Harvest) *UsersService {
-	service := UsersService{h: client}
-	return &service
-}
-
-type UserService struct {
-	api Api
-}
-
-func NewUserService(api Api) *UserService {
-	service := UserService{api: api}
-	return &service
-}
-
-func (s *UserService) All(users *[]*User, params url.Values) error {
-	return s.api.All(users, params)
-}
-
-func (s *UserService) Find(id int, user *User, params url.Values) error {
-	return s.api.Find(id, user, params)
-}
-
-func (s *UserService) Create(user *User) error {
-	return s.api.Create(user)
-}
-
-func (s *UserService) Update(user *User) error {
-	return s.api.Update(user)
-}
-
-func (s *UserService) Delete(user *User) error {
-	return s.api.Delete(user)
-}
+//go:generate go run ../cmd/api_gen/api_gen.go -type=User
 
 type User struct {
 	Id                           int       `json:"id,omitempty"`
@@ -67,6 +31,15 @@ type User struct {
 type UserPayload struct {
 	ErrorPayload
 	User *User `json:"user,omitempty"`
+}
+
+type UsersService struct {
+	h *Harvest
+}
+
+func NewUsersService(client *Harvest) *UsersService {
+	service := UsersService{h: client}
+	return &service
 }
 
 func (s *UsersService) All() ([]*User, error) {
