@@ -327,6 +327,8 @@ func (a *apiWrapperTestData) getErrors() string {
 	return a.errors.String()
 }
 
+type testFunc func(*apiWrapperTestData, *bool) Api
+
 func testApiAllWrapper(testData *apiWrapperTestData, called *bool) Api {
 	testFn := func(data interface{}, params url.Values) error {
 		*called = true

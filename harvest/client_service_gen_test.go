@@ -9,91 +9,91 @@ import (
 )
 
 var (
-	expectedUserServiceParams = url.Values{"foo": []string{"bar"}}
+	expectedClientServiceParams = url.Values{"foo": []string{"bar"}}
 
-	testsUserService = map[string]struct { // apiFn to testData
+	testsClientService = map[string]struct { // apiFn to testData
 		testData *apiWrapperTestData
 		testFn   testFunc
 		args     []interface{}
 	}{
 		"All": {
 			&apiWrapperTestData{
-				expectedParams:       expectedUserServiceParams,
-				expectedDataType:     reflect.TypeOf(&[]*User{}),
+				expectedParams:       expectedClientServiceParams,
+				expectedDataType:     reflect.TypeOf(&[]*Client{}),
 				expectedErrorMessage: "ERR",
 			},
 			testApiAllWrapper,
-			[]interface{}{&[]*User{}, expectedUserServiceParams},
+			[]interface{}{&[]*Client{}, expectedClientServiceParams},
 		},
 		"Find": {
 			&apiWrapperTestData{
-				expectedParams:       expectedUserServiceParams,
+				expectedParams:       expectedClientServiceParams,
 				expectedIdType:       reflect.TypeOf(12),
-				expectedDataType:     reflect.TypeOf(&User{}),
+				expectedDataType:     reflect.TypeOf(&Client{}),
 				expectedErrorMessage: "ERR",
 			},
 			testApiFindWrapper,
-			[]interface{}{12, &User{}, expectedUserServiceParams},
+			[]interface{}{12, &Client{}, expectedClientServiceParams},
 		},
 		"Create": {
 			&apiWrapperTestData{
-				expectedDataType:     reflect.TypeOf(&User{}),
+				expectedDataType:     reflect.TypeOf(&Client{}),
 				expectedErrorMessage: "ERR",
 			},
 			testApiCreateWrapper,
 
-			[]interface{}{&User{}},
+			[]interface{}{&Client{}},
 		},
 		"Update": {
 			&apiWrapperTestData{
-				expectedDataType:     reflect.TypeOf(&User{}),
+				expectedDataType:     reflect.TypeOf(&Client{}),
 				expectedErrorMessage: "ERR",
 			},
 			testApiUpdateWrapper,
 
-			[]interface{}{&User{}},
+			[]interface{}{&Client{}},
 		},
 		"Delete": {
 			&apiWrapperTestData{
-				expectedDataType:     reflect.TypeOf(&User{}),
+				expectedDataType:     reflect.TypeOf(&Client{}),
 				expectedErrorMessage: "ERR",
 			},
 			testApiDeleteWrapper,
 
-			[]interface{}{&User{}},
+			[]interface{}{&Client{}},
 		},
 	}
 )
 
-func TestUserServiceAll(t *testing.T) {
-	testUserServiceMethod(t, "All")
+func TestClientServiceAll(t *testing.T) {
+	testClientServiceMethod(t, "All")
 }
 
-func TestUserServiceFind(t *testing.T) {
-	testUserServiceMethod(t, "Find")
+func TestClientServiceFind(t *testing.T) {
+	testClientServiceMethod(t, "Find")
 }
 
-func TestUserServiceCreate(t *testing.T) {
-	testUserServiceMethod(t, "Create")
+func TestClientServiceCreate(t *testing.T) {
+	testClientServiceMethod(t, "Create")
 }
 
-func TestUserServiceUpdate(t *testing.T) {
-	testUserServiceMethod(t, "Update")
+func TestClientServiceUpdate(t *testing.T) {
+	testClientServiceMethod(t, "Update")
 }
 
-func TestUserServiceDelete(t *testing.T) {
-	testUserServiceMethod(t, "Delete")
+func TestClientServiceDelete(t *testing.T) {
+	testClientServiceMethod(t, "Delete")
 }
 
-func testUserServiceMethod(t *testing.T, name string) {
+func testClientServiceMethod(t *testing.T, name string) {
 	called := false
-	test, ok := testsUserService[name]
+	test, ok := testsClientService[name]
 	if !ok {
 		t.Logf("No test data for method '%s' defined.\n", name)
 		t.FailNow()
 	}
 	api := test.testFn(test.testData, &called)
-	service := NewUserService(api)
+	service := NewClientService(api)
 	serviceValue := reflect.ValueOf(service)
 	testFn := serviceValue.MethodByName(name)
 	if !testFn.IsValid() {

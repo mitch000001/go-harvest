@@ -98,34 +98,32 @@ import (
 	"testing"
 )
 
-type testFunc func(*apiWrapperTestData, *bool) Api
-
 var (
-	expectedParams = url.Values{"foo": []string{"bar"}}
+	expected{{.}}ServiceParams = url.Values{"foo": []string{"bar"}}
 
-	tests = map[string]struct { // apiFn to testData
+	tests{{.}}Service = map[string]struct { // apiFn to testData
 		testData *apiWrapperTestData
 		testFn   testFunc
 		args     []interface{}
 	}{
 		"All": {
 			&apiWrapperTestData{
-				expectedParams:       expectedParams,
+				expectedParams:       expected{{.}}ServiceParams,
 				expectedDataType:     reflect.TypeOf(&[]*{{.}}{}),
 				expectedErrorMessage: "ERR",
 			},
 			testApiAllWrapper,
-			[]interface{}{&[]*{{.}}{}, expectedParams},
+			[]interface{}{&[]*{{.}}{}, expected{{.}}ServiceParams},
 		},
 		"Find": {
 			&apiWrapperTestData{
-				expectedParams:       expectedParams,
+				expectedParams:       expected{{.}}ServiceParams,
 				expectedIdType:       reflect.TypeOf(12),
 				expectedDataType:     reflect.TypeOf(&{{.}}{}),
 				expectedErrorMessage: "ERR",
 			},
 			testApiFindWrapper,
-			[]interface{}{12, &{{.}}{}, expectedParams},
+			[]interface{}{12, &{{.}}{}, expected{{.}}ServiceParams},
 		},
 		"Create": {
 			&apiWrapperTestData{
@@ -158,28 +156,28 @@ var (
 )
 
 func Test{{.}}ServiceAll(t *testing.T) {
-	testServiceMethod(t, "All")
+	test{{.}}ServiceMethod(t, "All")
 }
 
 func Test{{.}}ServiceFind(t *testing.T) {
-	testServiceMethod(t, "Find")
+	test{{.}}ServiceMethod(t, "Find")
 }
 
 func Test{{.}}ServiceCreate(t *testing.T) {
-	testServiceMethod(t, "Create")
+	test{{.}}ServiceMethod(t, "Create")
 }
 
 func Test{{.}}ServiceUpdate(t *testing.T) {
-	testServiceMethod(t, "Update")
+	test{{.}}ServiceMethod(t, "Update")
 }
 
 func Test{{.}}ServiceDelete(t *testing.T) {
-	testServiceMethod(t, "Delete")
+	test{{.}}ServiceMethod(t, "Delete")
 }
 
-func testServiceMethod(t *testing.T, name string) {
+func test{{.}}ServiceMethod(t *testing.T, name string) {
 	called := false
-	test, ok := tests[name]
+	test, ok := tests{{.}}Service[name]
 	if !ok {
 		t.Logf("No test data for method '%s' defined.\n", name)
 		t.FailNow()
