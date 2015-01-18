@@ -312,7 +312,11 @@ func (a *JsonApi) Toggle(data interface{}) error {
 		return err
 	}
 	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode == http.StatusOK {
+		// TODO: ugly knowledge of internals from data
+		status := reflect.Indirect(reflect.ValueOf(data)).FieldByName("IsActive").Bool()
+		reflect.Indirect(reflect.ValueOf(data)).FieldByName("IsActive").SetBool(!status)
+	} else if response.StatusCode == http.StatusBadRequest {
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			return err
@@ -323,6 +327,8 @@ func (a *JsonApi) Toggle(data interface{}) error {
 			return err
 		}
 		return &ResponseError{&apiResponse}
+	} else {
+		panic(fmt.Sprintf("Unknown StatusCode: %d", response.StatusCode))
 	}
 	return nil
 }

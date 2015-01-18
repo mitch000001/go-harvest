@@ -293,12 +293,20 @@ func TestJsonApiDelete(t *testing.T) {
 	}
 }
 
+type toggleableTestPayload struct {
+	*testPayload
+	IsActive bool
+}
+
 func TestJsonApiToggle(t *testing.T) {
 	testClient := &testHttpClient{}
 	api := createJsonTestApi(testClient)
-	testData := testPayload{
-		Id:   12,
-		Data: "foobar",
+	testData := toggleableTestPayload{
+		testPayload: &testPayload{
+			Id:   12,
+			Data: "foobar",
+		},
+		IsActive: true,
 	}
 
 	testClient.setResponsePayload(http.StatusOK, nil, nil)
@@ -320,13 +328,18 @@ func TestJsonApiToggle(t *testing.T) {
 		t.Fail()
 	}
 	requestBodyBytes := panicErr(ioutil.ReadAll(request.Body)).([]byte)
-	expectedBytes := []byte(`{"testPayload":{"Id":12,"Data":"foobar"}}`)
+	expectedBytes := []byte(`{"toggleableTestPayload":{"Id":12,"Data":"foobar","IsActive":true}}`)
 	if !bytes.Equal(expectedBytes, requestBodyBytes) {
 		t.Logf("Expected request body to equal '%s', got '%s'\n", string(expectedBytes), string(requestBodyBytes))
 		t.Fail()
 	}
+	if testData.IsActive {
+		t.Logf("Expected IsActive to be toggled to false, got true.\n")
+		t.Fail()
+	}
 
 	// Failing toggle
+	testData.IsActive = true
 	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
 	response := &http.Response{
@@ -335,7 +348,7 @@ func TestJsonApiToggle(t *testing.T) {
 	}
 	testClient.testResponse = response
 
-	err = api.Delete(&testData)
+	err = api.Toggle(&testData)
 
 	if err == nil {
 		t.Logf("Expected an error, got nil\n")
@@ -349,6 +362,10 @@ func TestJsonApiToggle(t *testing.T) {
 			t.Logf("Expected error message '%s', got '%s'\n", expectedMessage, errorMessage)
 			t.Fail()
 		}
+	}
+	if !testData.IsActive {
+		t.Logf("Expected IsActive not to be toggled to false, but was.\n")
+		t.Fail()
 	}
 }
 
