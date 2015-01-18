@@ -84,51 +84,6 @@ func TestNewHarvest(t *testing.T) {
 	}
 }
 
-func TestProcessRequest(t *testing.T) {
-	testClient := &testHttpClient{}
-	api := createJsonTestApi(testClient)
-
-	path := "qux"
-	requestMethod := "GET"
-	bodyContent := []byte("BODY")
-	body := bytes.NewReader(bodyContent)
-
-	// Test
-	_, err := api.processRequest(requestMethod, path, body)
-
-	// Expectations
-	if err != nil {
-		t.Logf("Expected to get no error, got '%v'", err)
-		t.Fail()
-	}
-
-	expectedHeader := http.Header{
-		"Content-Type": []string{"application/json"},
-		"Accept":       []string{"application/json"},
-	}
-
-	testClient.testRequestFor(t, map[string]interface{}{
-		"Method": requestMethod,
-		"URL":    panicErr(api.baseUrl.Parse(path)),
-		"Header": compare(expectedHeader, func(a, b interface{}) bool {
-			for k, _ := range a.(http.Header) {
-				expectedHeader := a.(http.Header).Get(k)
-				actualHeader := b.(http.Header).Get(k)
-				if !reflect.DeepEqual(expectedHeader, actualHeader) {
-					return false
-				}
-			}
-			return true
-		}),
-		"Body": compare(string(bodyContent), func(a, b interface{}) bool {
-			expectedContentBytes := []byte(a.(string))
-			actualBody := b.(io.Reader)
-			actualBodyBytes := panicErr(ioutil.ReadAll(actualBody)).([]byte)
-			return bytes.Equal(actualBodyBytes, expectedContentBytes)
-		}),
-	})
-}
-
 type testPayload struct {
 	ID   int
 	Data string
