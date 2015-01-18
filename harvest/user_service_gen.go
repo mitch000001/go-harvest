@@ -7,10 +7,10 @@ import (
 )
 
 type UserService struct {
-	api Api
+	api CrudTogglerApi
 }
 
-func NewUserService(api Api) *UserService {
+func NewUserService(api CrudTogglerApi) *UserService {
 	service := UserService{api: api}
 	return &service
 }
@@ -33,4 +33,8 @@ func (s *UserService) Update(user *User) error {
 
 func (s *UserService) Delete(user *User) error {
 	return s.api.Delete(user)
+}
+
+func (s *UserService) Toggle(user *User) error {
+	return s.api.Toggle(user)
 }

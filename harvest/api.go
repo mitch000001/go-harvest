@@ -11,12 +11,21 @@ import (
 	"reflect"
 )
 
-type Api interface {
+type CrudApi interface {
 	All(interface{}, url.Values) error
 	Find(interface{}, interface{}, url.Values) error
 	Create(interface{}) error
 	Update(interface{}) error
 	Delete(interface{}) error
+}
+
+type Toggler interface {
+	Toggle(interface{}) error
+}
+
+type CrudTogglerApi interface {
+	CrudApi
+	Toggler
 }
 
 type JsonApiPayload struct {
@@ -261,6 +270,44 @@ func (a *JsonApi) Delete(data interface{}) error {
 	}
 
 	response, err := a.processRequest("DELETE", fmt.Sprintf(deleteTemplate, id), bytes.NewReader(marshaledPayload))
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		responseBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		apiResponse := ErrorPayload{}
+		err = json.Unmarshal(responseBytes, &apiResponse)
+		if err != nil {
+			return err
+		}
+		return &ResponseError{&apiResponse}
+	}
+	return nil
+}
+
+func (a *JsonApi) Toggle(data interface{}) error {
+	// TODO: ugly knowledge of internals from data
+	id := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Id").Int()
+	// TODO: It's nice to build "templates" for Sprintf, but it's not comprehensible
+	toggleTemplate := fmt.Sprintf("%s/%%d", a.path)
+	marshaledData, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	requestPayload := &JsonApiPayload{
+		Name:  reflect.TypeOf(data).Elem().Name(),
+		Value: marshaledData,
+	}
+	marshaledPayload, err := json.Marshal(&requestPayload)
+	if err != nil {
+		return err
+	}
+
+	response, err := a.processRequest("POST", fmt.Sprintf(toggleTemplate, id), bytes.NewReader(marshaledPayload))
 	if err != nil {
 		return err
 	}

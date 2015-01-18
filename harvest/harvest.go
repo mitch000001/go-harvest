@@ -68,7 +68,7 @@ func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, 
 
 // Harvest defines the client for requests on the API
 type Harvest struct {
-	api      Api
+	api      CrudApi
 	baseUrl  *url.URL // API endpoint base URL
 	Users    *UsersService
 	Projects *ProjectsService

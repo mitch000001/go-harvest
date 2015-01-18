@@ -59,10 +59,10 @@ import (
 )
 
 type {{.}}Service struct {
-	api Api
+	api CrudTogglerApi
 }
 
-func New{{.}}Service(api Api) *{{.}}Service {
+func New{{.}}Service(api CrudTogglerApi) *{{.}}Service {
 	service := {{.}}Service{api: api}
 	return &service
 }
@@ -85,6 +85,10 @@ func (s *{{.}}Service) Update(user *{{.}}) error {
 
 func (s *{{.}}Service) Delete(user *{{.}}) error {
 	return s.api.Delete(user)
+}
+
+func (s *{{.}}Service) Toggle(user *{{.}}) error {
+	return s.api.Toggle(user)
 }
 `
 
@@ -152,6 +156,15 @@ var (
 
 			[]interface{}{&{{.}}{}},
 		},
+		"Toggle": {
+			&apiWrapperTestData{
+				expectedDataType:     reflect.TypeOf(&{{.}}{}),
+				expectedErrorMessage: "ERR",
+			},
+			testApiToggleWrapper,
+
+			[]interface{}{&{{.}}{}},
+		},
 	}
 )
 
@@ -173,6 +186,10 @@ func Test{{.}}ServiceUpdate(t *testing.T) {
 
 func Test{{.}}ServiceDelete(t *testing.T) {
 	test{{.}}ServiceMethod(t, "Delete")
+}
+
+func Test{{.}}ServiceToggle(t *testing.T) {
+	test{{.}}ServiceMethod(t, "Toggle")
 }
 
 func test{{.}}ServiceMethod(t *testing.T, name string) {

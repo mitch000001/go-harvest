@@ -62,6 +62,15 @@ var (
 
 			[]interface{}{&Client{}},
 		},
+		"Toggle": {
+			&apiWrapperTestData{
+				expectedDataType:     reflect.TypeOf(&Client{}),
+				expectedErrorMessage: "ERR",
+			},
+			testApiToggleWrapper,
+
+			[]interface{}{&Client{}},
+		},
 	}
 )
 
@@ -83,6 +92,10 @@ func TestClientServiceUpdate(t *testing.T) {
 
 func TestClientServiceDelete(t *testing.T) {
 	testClientServiceMethod(t, "Delete")
+}
+
+func TestClientServiceToggle(t *testing.T) {
+	testClientServiceMethod(t, "Toggle")
 }
 
 func testClientServiceMethod(t *testing.T, name string) {
