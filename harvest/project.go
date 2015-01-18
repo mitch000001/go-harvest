@@ -69,6 +69,11 @@ type Project struct {
 	HintLatestRecordAt   ShortDate `json:"hint_latest_record_at,omitempty"`
 }
 
+func (p *Project) ToggleActive() bool {
+	p.Active = !p.Active
+	return p.Active
+}
+
 type ProjectPayload struct {
 	ErrorPayload
 	Project *Project `json:"project,omitempty"`

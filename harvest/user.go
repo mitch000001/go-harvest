@@ -28,6 +28,11 @@ type User struct {
 	CreatedAt                    time.Time `json:"created_at,omitempty"`
 }
 
+func (u *User) ToggleActive() bool {
+	u.IsActive = !u.IsActive
+	return u.IsActive
+}
+
 type UserPayload struct {
 	ErrorPayload
 	User *User `json:"user,omitempty"`

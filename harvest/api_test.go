@@ -298,6 +298,11 @@ type toggleableTestPayload struct {
 	IsActive bool
 }
 
+func (t *toggleableTestPayload) ToggleActive() bool {
+	t.IsActive = !t.IsActive
+	return t.IsActive
+}
+
 func TestJsonApiToggle(t *testing.T) {
 	testClient := &testHttpClient{}
 	api := createJsonTestApi(testClient)
@@ -485,7 +490,7 @@ func testApiDeleteWrapper(testData *apiWrapperTestData, called *bool) CrudToggle
 }
 
 func testApiToggleWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
-	testFn := func(data interface{}) error {
+	testFn := func(data ActiveToggler) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
 		if !reflect.DeepEqual(dataType, testData.expectedDataType) {
@@ -517,7 +522,7 @@ func testApiDelete(fn func(interface{}) error) CrudTogglerApi {
 	return &testApi{deleteFn: fn}
 }
 
-func testApiToggle(fn func(interface{}) error) CrudTogglerApi {
+func testApiToggle(fn func(ActiveToggler) error) CrudTogglerApi {
 	return &testApi{toggleFn: fn}
 }
 
@@ -527,7 +532,7 @@ type testApi struct {
 	createFn func(interface{}) error
 	updateFn func(interface{}) error
 	deleteFn func(interface{}) error
-	toggleFn func(interface{}) error
+	toggleFn func(ActiveToggler) error
 }
 
 func (t *testApi) All(data interface{}, params url.Values) error {
@@ -550,6 +555,6 @@ func (t *testApi) Delete(data interface{}) error {
 	return t.deleteFn(data)
 }
 
-func (t *testApi) Toggle(data interface{}) error {
+func (t *testApi) Toggle(data ActiveToggler) error {
 	return t.toggleFn(data)
 }

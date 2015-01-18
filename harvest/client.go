@@ -24,6 +24,11 @@ type Client struct {
 	LastInvoiceKind         string    `json:"last-invoice-kind,omitempty"`
 }
 
+func (c *Client) ToggleActive() bool {
+	c.Active = !c.Active
+	return c.Active
+}
+
 type Timeframe struct {
 	StartDate ShortDate
 	EndDate   ShortDate

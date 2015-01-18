@@ -20,12 +20,18 @@ type CrudApi interface {
 }
 
 type Toggler interface {
-	Toggle(interface{}) error
+	Toggle(ActiveToggler) error
 }
 
 type CrudTogglerApi interface {
 	CrudApi
 	Toggler
+}
+
+type ActiveToggler interface {
+	// Implementations of ToggleActive should toggle their active state and
+	// return the current status
+	ToggleActive() bool
 }
 
 type JsonApiPayload struct {
@@ -289,7 +295,7 @@ func (a *JsonApi) Delete(data interface{}) error {
 	return nil
 }
 
-func (a *JsonApi) Toggle(data interface{}) error {
+func (a *JsonApi) Toggle(data ActiveToggler) error {
 	// TODO: ugly knowledge of internals from data
 	id := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Id").Int()
 	// TODO: It's nice to build "templates" for Sprintf, but it's not comprehensible
@@ -313,9 +319,7 @@ func (a *JsonApi) Toggle(data interface{}) error {
 	}
 	defer response.Body.Close()
 	if response.StatusCode == http.StatusOK {
-		// TODO: ugly knowledge of internals from data
-		status := reflect.Indirect(reflect.ValueOf(data)).FieldByName("IsActive").Bool()
-		reflect.Indirect(reflect.ValueOf(data)).FieldByName("IsActive").SetBool(!status)
+		data.ToggleActive()
 	} else if response.StatusCode == http.StatusBadRequest {
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
