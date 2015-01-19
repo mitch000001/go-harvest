@@ -1,6 +1,6 @@
 // +build integration
 
-package harvest
+package harvest_test
 
 import (
 	"testing"
@@ -36,14 +36,14 @@ func TestFindClient(t *testing.T) {
 	}
 	first := projects[0]
 
-	project, err := client.Projects.Find(first.Id)
+	project, err := client.Projects.Find(first.ID)
 	if err != nil {
 		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
 	}
 	if project == nil {
 		t.Fatal("Expected project not to be nil")
 	}
-	if project.Id != first.Id {
+	if project.ID != first.ID {
 		t.Fatalf("Expected to find project with id '%d', got id '%d'\n", first.Id, project.Id)
 	}
 

@@ -1,10 +1,12 @@
 // +build integration
 
-package harvest
+package harvest_test
 
 import (
 	"testing"
 	"time"
+
+	"github.com/mitch000001/go-harvest/harvest"
 )
 
 func TestFindAllUsersUpdatedSince(t *testing.T) {
@@ -49,11 +51,11 @@ func TestFindUser(t *testing.T) {
 		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
 	}
 	first := users[0]
-	user, err := client.Users.Find(first.Id)
+	user, err := client.Users.Find(first.ID)
 	if err != nil {
 		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
 	}
-	if first.Id != user.Id {
+	if first.ID != user.ID {
 		t.Fatalf("Expect to find user with id %d, got user %#v\n", first.Id, user)
 	}
 
@@ -72,7 +74,7 @@ func TestFindUser(t *testing.T) {
 
 func TestCreateAndDeleteUser(t *testing.T) {
 	client := createClient(t)
-	user := User{
+	user := harvest.User{
 		FirstName: "Foo",
 		LastName:  "Bar",
 		Email:     "foo@example.com"}
@@ -95,7 +97,7 @@ func TestCreateAndDeleteUser(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 	client := createClient(t)
-	user := &User{
+	user := &harvest.User{
 		FirstName:  "Foo",
 		LastName:   "Bar",
 		Email:      "foo@example.com",

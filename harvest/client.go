@@ -3,7 +3,6 @@ package harvest
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"time"
 )
 
@@ -82,57 +81,7 @@ func (tf *Timeframe) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type ClientsService struct {
-	h *Harvest
-}
-
-func NewClientsService(h *Harvest) *ClientsService {
-	return &ClientsService{h}
-}
-
 type ClientPayload struct {
 	ErrorPayload
 	Client *Client `json:"client,omitempty"`
-}
-
-func (c *ClientsService) All() ([]*Client, error) {
-	response, err := c.h.ProcessRequest("GET", "/clients", nil)
-	if err != nil {
-		return nil, err
-	}
-	responseBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	clientPayloads := make([]*ClientPayload, 0)
-	err = json.Unmarshal(responseBytes, &clientPayloads)
-	if err != nil {
-		return nil, err
-	}
-	clients := make([]*Client, len(clientPayloads))
-	for i, c := range clientPayloads {
-		clients[i] = c.Client
-	}
-	return clients, nil
-}
-
-func (c *ClientsService) Find(id int) (*Client, error) {
-	response, err := c.h.ProcessRequest("GET", fmt.Sprintf("/clients/%d", id), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-	if response.StatusCode == 404 {
-		return nil, &ResponseError{&ErrorPayload{fmt.Sprintf("No client found for id %d", id)}}
-	}
-	responseBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	clientPayload := ClientPayload{}
-	err = json.Unmarshal(responseBytes, &clientPayload)
-	if err != nil {
-		return nil, err
-	}
-	return clientPayload.Client, nil
 }

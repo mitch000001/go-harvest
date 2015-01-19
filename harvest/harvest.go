@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 	"strings"
 )
@@ -41,48 +39,31 @@ func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, 
 	if err != nil {
 		return nil, err
 	}
+	api := &JsonApi{
+		Client:  clientProvider.Client,
+		baseUrl: baseUrl,
+	}
 	h := &Harvest{
 		baseUrl: baseUrl,
-		api:     &JsonApi{Client: clientProvider.Client},
+		api:     api,
 	}
-	h.Users = NewUsersService(h)
-	h.Projects = NewProjectsService(h)
-	h.Clients = NewClientsService(h)
+	h.Users = NewUserService(api)
+	h.Projects = NewProjectService(api)
+	h.Clients = NewClientService(api)
 	return h, nil
 }
 
 // Harvest defines the client for requests on the API
 type Harvest struct {
-	api      CrudEndpoint
+	api      *JsonApi
 	baseUrl  *url.URL // API endpoint base URL
-	Users    *UsersService
-	Projects *ProjectsService
-	Clients  *ClientsService
-}
-
-func (h *Harvest) ProcessRequest(method string, path string, body io.Reader) (*http.Response, error) {
-	requestUrl, err := h.baseUrl.Parse(path)
-	if err != nil {
-		return nil, err
-	}
-	request, err := http.NewRequest(method, requestUrl.String(), body)
-	if err != nil {
-		return nil, err
-	}
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	if err != nil {
-		return nil, err
-	}
-	response, err := h.api.(*JsonApi).Client().Do(request)
-	if err != nil {
-		return nil, err
-	}
-	return response, nil
+	Users    *UserService
+	Projects *ProjectService
+	Clients  *ClientService
 }
 
 func (h *Harvest) Account() (*Account, error) {
-	response, err := h.ProcessRequest("GET", "/account/who_am_i", nil)
+	response, err := h.api.processRequest("GET", "/account/who_am_i", nil)
 	if err != nil {
 		return nil, err
 	}

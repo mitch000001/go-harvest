@@ -1,10 +1,12 @@
 // +build integration
 
-package harvest
+package harvest_test
 
 import (
 	"testing"
 	"time"
+
+	"github.com/mitch000001/go-harvest/harvest"
 )
 
 func TestFindAllProjects(t *testing.T) {
@@ -50,14 +52,14 @@ func TestFindProject(t *testing.T) {
 	}
 	first := projects[0]
 
-	project, err := client.Projects.Find(first.Id)
+	project, err := client.Projects.Find(first.ID)
 	if err != nil {
 		t.Fatalf("Got error %T with message: %s\n", err, err.Error())
 	}
 	if project == nil {
 		t.Fatal("Expected project not to be nil")
 	}
-	if project.Id != first.Id {
+	if project.ID != first.ID {
 		t.Fatalf("Expected to find project with id '%d', got id '%d'\n", first.Id, project.Id)
 	}
 
@@ -76,7 +78,7 @@ func TestFindProject(t *testing.T) {
 
 func TestCreateAndDeleteProject(t *testing.T) {
 	client := createClient(t)
-	project := Project{
+	project := harvest.Project{
 		Name:     "foo",
 		ClientId: 2605222,
 		BillBy:   "none",
@@ -92,7 +94,7 @@ func TestCreateAndDeleteProject(t *testing.T) {
 	if createdProject == nil {
 		t.Fatal("Expected project not to be nil")
 	}
-	if createdProject.Id == 0 {
+	if createdProject.ID == 0 {
 		t.Fatal("Expected Id to be set")
 	}
 	t.Logf("Got returned project: %+#v\n", createdProject)
@@ -108,7 +110,7 @@ func TestCreateAndDeleteProject(t *testing.T) {
 
 func TestUpdateProject(t *testing.T) {
 	client := createClient(t)
-	project := Project{
+	project := harvest.Project{
 		Name:     "foo",
 		ClientId: 2605222,
 		BillBy:   "none",
@@ -139,7 +141,7 @@ func TestUpdateProject(t *testing.T) {
 
 func TestToggleProject(t *testing.T) {
 	client := createClient(t)
-	project := Project{
+	project := harvest.Project{
 		Name:     "foo",
 		ClientId: 2605222,
 		BillBy:   "none",

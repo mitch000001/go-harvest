@@ -1,6 +1,6 @@
 // +build integration
 
-package harvest
+package harvest_test
 
 import (
 	"testing"
