@@ -11,7 +11,7 @@ import (
 	"reflect"
 )
 
-type CrudApi interface {
+type CrudEndpoint interface {
 	All(interface{}, url.Values) error
 	Find(interface{}, interface{}, url.Values) error
 	Create(CrudModel) error
@@ -19,13 +19,13 @@ type CrudApi interface {
 	Delete(CrudModel) error
 }
 
-type Toggler interface {
+type TogglerEndpoint interface {
 	Toggle(ActiveTogglerCrudModel) error
 }
 
-type CrudTogglerApi interface {
-	CrudApi
-	Toggler
+type CrudTogglerEndpoint interface {
+	CrudEndpoint
+	TogglerEndpoint
 }
 
 type ActiveToggler interface {

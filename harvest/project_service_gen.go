@@ -7,34 +7,34 @@ import (
 )
 
 type ProjectService struct {
-	api CrudTogglerApi
+	endpoint CrudTogglerEndpoint
 }
 
-func NewProjectService(api CrudTogglerApi) *ProjectService {
-	service := ProjectService{api: api}
+func NewProjectService(endpoint CrudTogglerEndpoint) *ProjectService {
+	service := ProjectService{endpoint: endpoint}
 	return &service
 }
 
-func (s *ProjectService) All(users *[]*Project, params url.Values) error {
-	return s.api.All(users, params)
+func (s *ProjectService) All(projects *[]*Project, params url.Values) error {
+	return s.endpoint.All(projects, params)
 }
 
-func (s *ProjectService) Find(id int, user *Project, params url.Values) error {
-	return s.api.Find(id, user, params)
+func (s *ProjectService) Find(id int, project *Project, params url.Values) error {
+	return s.endpoint.Find(id, project, params)
 }
 
-func (s *ProjectService) Create(user *Project) error {
-	return s.api.Create(user)
+func (s *ProjectService) Create(project *Project) error {
+	return s.endpoint.Create(project)
 }
 
-func (s *ProjectService) Update(user *Project) error {
-	return s.api.Update(user)
+func (s *ProjectService) Update(project *Project) error {
+	return s.endpoint.Update(project)
 }
 
-func (s *ProjectService) Delete(user *Project) error {
-	return s.api.Delete(user)
+func (s *ProjectService) Delete(project *Project) error {
+	return s.endpoint.Delete(project)
 }
 
-func (s *ProjectService) Toggle(user *Project) error {
-	return s.api.Toggle(user)
+func (s *ProjectService) Toggle(project *Project) error {
+	return s.endpoint.Toggle(project)
 }

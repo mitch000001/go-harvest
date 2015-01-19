@@ -7,34 +7,34 @@ import (
 )
 
 type UserService struct {
-	api CrudTogglerApi
+	endpoint CrudTogglerEndpoint
 }
 
-func NewUserService(api CrudTogglerApi) *UserService {
-	service := UserService{api: api}
+func NewUserService(endpoint CrudTogglerEndpoint) *UserService {
+	service := UserService{endpoint: endpoint}
 	return &service
 }
 
 func (s *UserService) All(users *[]*User, params url.Values) error {
-	return s.api.All(users, params)
+	return s.endpoint.All(users, params)
 }
 
 func (s *UserService) Find(id int, user *User, params url.Values) error {
-	return s.api.Find(id, user, params)
+	return s.endpoint.Find(id, user, params)
 }
 
 func (s *UserService) Create(user *User) error {
-	return s.api.Create(user)
+	return s.endpoint.Create(user)
 }
 
 func (s *UserService) Update(user *User) error {
-	return s.api.Update(user)
+	return s.endpoint.Update(user)
 }
 
 func (s *UserService) Delete(user *User) error {
-	return s.api.Delete(user)
+	return s.endpoint.Delete(user)
 }
 
 func (s *UserService) Toggle(user *User) error {
-	return s.api.Toggle(user)
+	return s.endpoint.Toggle(user)
 }

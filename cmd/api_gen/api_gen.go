@@ -9,45 +9,66 @@ import (
 )
 
 var (
-	serviceTypeName  = flag.String("type", "", `-type="Type"`)
+	service          = new(serviceType)
 	fileTemplate     = template.Must(template.New("file").Parse(fileTemplateContent))
 	testfileTemplate = template.Must(template.New("testfile").Parse(testFileContent))
 	fileNameTmpl     = "%s_service_gen.go"
 	testfileNameTmpl = "%s_service_gen_test.go"
 )
 
+func init() {
+	flag.Var(service, "type", `-type="Type"`)
+}
+
 func main() {
 	flag.Parse()
-	if *serviceTypeName == "" {
-		fmt.Printf("No service given. Aborting...\n")
+	if service == nil {
+		fmt.Printf("No service type given. Aborting...\n")
 		os.Exit(1)
 	}
-	fname := fmt.Sprintf(fileNameTmpl, strings.ToLower(*serviceTypeName))
+	fname := fmt.Sprintf(fileNameTmpl, service.Param)
 	file, err := os.Create(fname)
 	if err != nil {
 		fmt.Printf("There was an error creating the file: %s\n", fname)
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
-	err = fileTemplate.Execute(file, *serviceTypeName)
+	err = fileTemplate.Execute(file, service)
 	if err != nil {
 		fmt.Printf("There was an error parsing the given file template.\n")
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
-	fname = fmt.Sprintf(testfileNameTmpl, strings.ToLower(*serviceTypeName))
+	fname = fmt.Sprintf(testfileNameTmpl, service.Param)
 	file, err = os.Create(fname)
 	if err != nil {
 		fmt.Printf("There was an error creating the file: %s\n", fname)
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
-	err = testfileTemplate.Execute(file, *serviceTypeName)
+	err = testfileTemplate.Execute(file, service.Type)
 	if err != nil {
 		fmt.Printf("There was an error parsing the given file template.\n")
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+type serviceType struct {
+	Type  string
+	Param string
+}
+
+func (s *serviceType) String() string {
+	return s.Type
+}
+
+func (s *serviceType) Set(in string) error {
+	*s = serviceType{
+		Type:  in,
+		Param: strings.ToLower(in),
+	}
+	return nil
 }
 
 var fileTemplateContent = `// DO NOT EDIT!
@@ -58,37 +79,37 @@ import (
 	"net/url"
 )
 
-type {{.}}Service struct {
-	api CrudTogglerApi
+type {{.Type}}Service struct {
+	endpoint CrudTogglerEndpoint
 }
 
-func New{{.}}Service(api CrudTogglerApi) *{{.}}Service {
-	service := {{.}}Service{api: api}
+func New{{.Type}}Service(endpoint CrudTogglerEndpoint) *{{.Type}}Service {
+	service := {{.Type}}Service{endpoint: endpoint}
 	return &service
 }
 
-func (s *{{.}}Service) All(users *[]*{{.}}, params url.Values) error {
-	return s.api.All(users, params)
+func (s *{{.Type}}Service) All({{.Param}}s *[]*{{.Type}}, params url.Values) error {
+	return s.endpoint.All({{.Param}}s, params)
 }
 
-func (s *{{.}}Service) Find(id int, user *{{.}}, params url.Values) error {
-	return s.api.Find(id, user, params)
+func (s *{{.Type}}Service) Find(id int, {{.Param}} *{{.Type}}, params url.Values) error {
+	return s.endpoint.Find(id, {{.Param}}, params)
 }
 
-func (s *{{.}}Service) Create(user *{{.}}) error {
-	return s.api.Create(user)
+func (s *{{.Type}}Service) Create({{.Param}} *{{.Type}}) error {
+	return s.endpoint.Create({{.Param}})
 }
 
-func (s *{{.}}Service) Update(user *{{.}}) error {
-	return s.api.Update(user)
+func (s *{{.Type}}Service) Update({{.Param}} *{{.Type}}) error {
+	return s.endpoint.Update({{.Param}})
 }
 
-func (s *{{.}}Service) Delete(user *{{.}}) error {
-	return s.api.Delete(user)
+func (s *{{.Type}}Service) Delete({{.Param}} *{{.Type}}) error {
+	return s.endpoint.Delete({{.Param}})
 }
 
-func (s *{{.}}Service) Toggle(user *{{.}}) error {
-	return s.api.Toggle(user)
+func (s *{{.Type}}Service) Toggle({{.Param}} *{{.Type}}) error {
+	return s.endpoint.Toggle({{.Param}})
 }
 `
 

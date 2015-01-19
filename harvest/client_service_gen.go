@@ -7,34 +7,34 @@ import (
 )
 
 type ClientService struct {
-	api CrudTogglerApi
+	endpoint CrudTogglerEndpoint
 }
 
-func NewClientService(api CrudTogglerApi) *ClientService {
-	service := ClientService{api: api}
+func NewClientService(endpoint CrudTogglerEndpoint) *ClientService {
+	service := ClientService{endpoint: endpoint}
 	return &service
 }
 
-func (s *ClientService) All(users *[]*Client, params url.Values) error {
-	return s.api.All(users, params)
+func (s *ClientService) All(clients *[]*Client, params url.Values) error {
+	return s.endpoint.All(clients, params)
 }
 
-func (s *ClientService) Find(id int, user *Client, params url.Values) error {
-	return s.api.Find(id, user, params)
+func (s *ClientService) Find(id int, client *Client, params url.Values) error {
+	return s.endpoint.Find(id, client, params)
 }
 
-func (s *ClientService) Create(user *Client) error {
-	return s.api.Create(user)
+func (s *ClientService) Create(client *Client) error {
+	return s.endpoint.Create(client)
 }
 
-func (s *ClientService) Update(user *Client) error {
-	return s.api.Update(user)
+func (s *ClientService) Update(client *Client) error {
+	return s.endpoint.Update(client)
 }
 
-func (s *ClientService) Delete(user *Client) error {
-	return s.api.Delete(user)
+func (s *ClientService) Delete(client *Client) error {
+	return s.endpoint.Delete(client)
 }
 
-func (s *ClientService) Toggle(user *Client) error {
-	return s.api.Toggle(user)
+func (s *ClientService) Toggle(client *Client) error {
+	return s.endpoint.Toggle(client)
 }

@@ -452,9 +452,9 @@ func (a *apiWrapperTestData) getErrors() string {
 	return a.errors.String()
 }
 
-type testFunc func(*apiWrapperTestData, *bool) CrudTogglerApi
+type testFunc func(*apiWrapperTestData, *bool) CrudTogglerEndpoint
 
-func testApiAllWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
+func testApiAllWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerEndpoint {
 	testFn := func(data interface{}, params url.Values) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
@@ -472,7 +472,7 @@ func testApiAllWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerAp
 	return testApiAll(testFn)
 }
 
-func testApiFindWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
+func testApiFindWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerEndpoint {
 	testFn := func(id interface{}, data interface{}, params url.Values) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
@@ -494,7 +494,7 @@ func testApiFindWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerA
 	return testApiFind(testFn)
 }
 
-func testApiCreateWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
+func testApiCreateWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerEndpoint {
 	testFn := func(data CrudModel) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
@@ -507,7 +507,7 @@ func testApiCreateWrapper(testData *apiWrapperTestData, called *bool) CrudToggle
 	return testApiCreate(testFn)
 }
 
-func testApiUpdateWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
+func testApiUpdateWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerEndpoint {
 	testFn := func(data CrudModel) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
@@ -520,7 +520,7 @@ func testApiUpdateWrapper(testData *apiWrapperTestData, called *bool) CrudToggle
 	return testApiUpdate(testFn)
 }
 
-func testApiDeleteWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
+func testApiDeleteWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerEndpoint {
 	testFn := func(data CrudModel) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
@@ -533,7 +533,7 @@ func testApiDeleteWrapper(testData *apiWrapperTestData, called *bool) CrudToggle
 	return testApiDelete(testFn)
 }
 
-func testApiToggleWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerApi {
+func testApiToggleWrapper(testData *apiWrapperTestData, called *bool) CrudTogglerEndpoint {
 	testFn := func(data ActiveTogglerCrudModel) error {
 		*called = true
 		dataType := reflect.TypeOf(data)
@@ -546,27 +546,27 @@ func testApiToggleWrapper(testData *apiWrapperTestData, called *bool) CrudToggle
 	return testApiToggle(testFn)
 }
 
-func testApiAll(fn func(interface{}, url.Values) error) CrudTogglerApi {
+func testApiAll(fn func(interface{}, url.Values) error) CrudTogglerEndpoint {
 	return &testApi{allFn: fn}
 }
 
-func testApiFind(fn func(interface{}, interface{}, url.Values) error) CrudTogglerApi {
+func testApiFind(fn func(interface{}, interface{}, url.Values) error) CrudTogglerEndpoint {
 	return &testApi{findFn: fn}
 }
 
-func testApiCreate(fn func(CrudModel) error) CrudTogglerApi {
+func testApiCreate(fn func(CrudModel) error) CrudTogglerEndpoint {
 	return &testApi{createFn: fn}
 }
 
-func testApiUpdate(fn func(CrudModel) error) CrudTogglerApi {
+func testApiUpdate(fn func(CrudModel) error) CrudTogglerEndpoint {
 	return &testApi{updateFn: fn}
 }
 
-func testApiDelete(fn func(CrudModel) error) CrudTogglerApi {
+func testApiDelete(fn func(CrudModel) error) CrudTogglerEndpoint {
 	return &testApi{deleteFn: fn}
 }
 
-func testApiToggle(fn func(ActiveTogglerCrudModel) error) CrudTogglerApi {
+func testApiToggle(fn func(ActiveTogglerCrudModel) error) CrudTogglerEndpoint {
 	return &testApi{toggleFn: fn}
 }
 
