@@ -29,21 +29,6 @@ func parseSubdomain(subdomain string) (*url.URL, error) {
 	return url.Parse(subdomain)
 }
 
-// HttpClientProvider yields a function to provide an HttpClient.
-type HttpClientProvider interface {
-	// Client returns an HttpClient, which defined the minimal interface
-	// of a http client usable by the harvest client to process http request
-	Client() HttpClient
-}
-
-// HttpClient is the minimal interface which is used by the harvest client.
-type HttpClient interface {
-	// Do accepts an *http.Request and processes it
-	//
-	// See http.Client for a possible implementation
-	Do(*http.Request) (*http.Response, error)
-}
-
 // NewHarvest creates a new Client
 //
 // The subdomain must either be only the subdomain or the fully qualified url.

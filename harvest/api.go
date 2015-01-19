@@ -11,6 +11,21 @@ import (
 	"reflect"
 )
 
+// HttpClientProvider yields a function to provide an HttpClient.
+type HttpClientProvider interface {
+	// Client returns an HttpClient, which defined the minimal interface
+	// of a http client usable by the harvest client to process http request
+	Client() HttpClient
+}
+
+// HttpClient is the minimal interface which is used by the harvest client.
+type HttpClient interface {
+	// Do accepts an *http.Request and processes it
+	//
+	// See http.Client for a possible implementation
+	Do(*http.Request) (*http.Response, error)
+}
+
 type CrudEndpoint interface {
 	All(interface{}, url.Values) error
 	Find(interface{}, interface{}, url.Values) error
