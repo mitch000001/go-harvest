@@ -189,32 +189,6 @@ func (t *testHttpClient) Do(request *http.Request) (*http.Response, error) {
 	return t.testResponse, t.testError
 }
 
-type compareTo interface {
-	// compareTo compares the inputs with the caller
-	compareTo(b interface{}) bool
-}
-
-type compareToWrapper struct {
-	data      interface{}
-	compareFn func(interface{}, interface{}) bool
-}
-
-func (c *compareToWrapper) compareTo(in interface{}) bool {
-	return c.compareFn(c.data, in)
-}
-
-func (c *compareToWrapper) GoString() string {
-	return fmt.Sprintf("%+#v", c.data)
-}
-
-func (c *compareToWrapper) String() string {
-	return fmt.Sprintf("%s", c.data)
-}
-
-func compare(data interface{}, compareFn func(interface{}, interface{}) bool) compareTo {
-	return &compareToWrapper{data: data, compareFn: compareFn}
-}
-
 func (t *testHttpClient) testRequestFor(tt *testing.T, testData map[string]interface{}) {
 	testRequest := t.testRequest
 	if testRequest == nil {
@@ -240,20 +214,6 @@ func (t *testHttpClient) testRequestFor(tt *testing.T, testData map[string]inter
 			}
 		}
 	}
-}
-
-func structToMap(input interface{}) (map[string]interface{}, error) {
-	inputValue := reflect.Indirect(reflect.ValueOf(input))
-	if kind := inputValue.Kind(); kind != reflect.Struct {
-		return nil, fmt.Errorf("Can't turn %v into map\n", kind)
-	}
-	inputType := inputValue.Type()
-	output := make(map[string]interface{})
-	for i := 0; i < inputValue.NumField(); i++ {
-		fieldName := inputType.Field(i).Name
-		output[fieldName] = inputValue.Field(i).Interface()
-	}
-	return output, nil
 }
 
 func (t *testHttpClient) setResponsePayload(statusCode int, header http.Header, data interface{}) {
@@ -312,6 +272,46 @@ func panicErr(input interface{}, err error) interface{} {
 		panic(err)
 	}
 	return input
+}
+
+func structToMap(input interface{}) (map[string]interface{}, error) {
+	inputValue := reflect.Indirect(reflect.ValueOf(input))
+	if kind := inputValue.Kind(); kind != reflect.Struct {
+		return nil, fmt.Errorf("Can't turn %v into map\n", kind)
+	}
+	inputType := inputValue.Type()
+	output := make(map[string]interface{})
+	for i := 0; i < inputValue.NumField(); i++ {
+		fieldName := inputType.Field(i).Name
+		output[fieldName] = inputValue.Field(i).Interface()
+	}
+	return output, nil
+}
+
+type compareTo interface {
+	// compareTo compares the inputs with the caller
+	compareTo(b interface{}) bool
+}
+
+type compareToWrapper struct {
+	data      interface{}
+	compareFn func(interface{}, interface{}) bool
+}
+
+func (c *compareToWrapper) compareTo(in interface{}) bool {
+	return c.compareFn(c.data, in)
+}
+
+func (c *compareToWrapper) GoString() string {
+	return fmt.Sprintf("%+#v", c.data)
+}
+
+func (c *compareToWrapper) String() string {
+	return fmt.Sprintf("%s", c.data)
+}
+
+func compare(data interface{}, compareFn func(interface{}, interface{}) bool) compareTo {
+	return &compareToWrapper{data: data, compareFn: compareFn}
 }
 
 type sortedBytes []byte
