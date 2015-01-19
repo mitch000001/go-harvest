@@ -82,6 +82,19 @@ func TestNewHarvest(t *testing.T) {
 		t.Logf("Expected clients service not to be nil")
 		t.Fail()
 	}
+
+	// wrong kind of subdomain
+	client, err = NewHarvest("", testClientProvider)
+
+	if err == nil {
+		t.Logf("Expected error\n")
+		t.Fail()
+	}
+
+	if client != nil {
+		t.Logf("Expected returning client to be nil\n")
+		t.Fail()
+	}
 }
 
 type testPayload struct {
