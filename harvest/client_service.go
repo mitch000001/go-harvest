@@ -17,7 +17,7 @@ func NewClientService(api *JsonApi) *ClientService {
 }
 
 func (c *ClientService) All() ([]*Client, error) {
-	response, err := c.api.processRequest("GET", "/clients", nil)
+	response, err := c.api.ProcessRequest("GET", "/clients", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c *ClientService) All() ([]*Client, error) {
 }
 
 func (c *ClientService) Find(id int) (*Client, error) {
-	response, err := c.api.processRequest("GET", fmt.Sprintf("/clients/%d", id), nil)
+	response, err := c.api.ProcessRequest("GET", fmt.Sprintf("/clients/%d", id), nil)
 	if err != nil {
 		return nil, err
 	}

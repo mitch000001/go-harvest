@@ -65,6 +65,10 @@ type Project struct {
 	HintLatestRecordAt   ShortDate `json:"hint_latest_record_at,omitempty"`
 }
 
+func (p *Project) Type() string {
+	return "Project"
+}
+
 func (p *Project) Id() int {
 	return p.ID
 }

@@ -23,6 +23,10 @@ type Client struct {
 	LastInvoiceKind         string    `json:"last-invoice-kind,omitempty"`
 }
 
+func (c *Client) Type() string {
+	return "Client"
+}
+
 func (c *Client) Id() int {
 	return c.ID
 }

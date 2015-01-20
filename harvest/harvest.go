@@ -63,7 +63,7 @@ type Harvest struct {
 }
 
 func (h *Harvest) Account() (*Account, error) {
-	response, err := h.api.processRequest("GET", "/account/who_am_i", nil)
+	response, err := h.api.ProcessRequest("GET", "/account/who_am_i", nil)
 	if err != nil {
 		return nil, err
 	}

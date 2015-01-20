@@ -22,7 +22,7 @@ func TestJsonApiProcessRequest(t *testing.T) {
 	body := bytes.NewReader(bodyContent)
 
 	// Test
-	_, err := api.processRequest(requestMethod, path, body)
+	_, err := api.ProcessRequest(requestMethod, path, body)
 
 	// Expectations
 	if err != nil {
@@ -246,7 +246,7 @@ func TestJsonApiUpdate(t *testing.T) {
 		t.Fail()
 	}
 	requestBodyBytes := panicErr(ioutil.ReadAll(request.Body)).([]byte)
-	expectedBytes := []byte(`{"testPayload":{"ID":12,"Data":"foobar"}}`)
+	expectedBytes := []byte(`{"testpayload":{"ID":12,"Data":"foobar"}}`)
 	if !bytes.Equal(expectedBytes, requestBodyBytes) {
 		t.Logf("Expected request body to equal '%s', got '%s'\n", string(expectedBytes), string(requestBodyBytes))
 		t.Fail()
@@ -305,7 +305,7 @@ func TestJsonApiDelete(t *testing.T) {
 		t.Fail()
 	}
 	requestBodyBytes := panicErr(ioutil.ReadAll(request.Body)).([]byte)
-	expectedBytes := []byte(`{"testPayload":{"ID":12,"Data":"foobar"}}`)
+	expectedBytes := []byte(`{"testpayload":{"ID":12,"Data":"foobar"}}`)
 	if !bytes.Equal(expectedBytes, requestBodyBytes) {
 		t.Logf("Expected request body to equal '%s', got '%s'\n", string(expectedBytes), string(requestBodyBytes))
 		t.Fail()
@@ -347,6 +347,10 @@ func (t *toggleableTestPayload) ToggleActive() bool {
 	return t.IsActive
 }
 
+func (t *toggleableTestPayload) Type() string {
+	return "toggleableTestPayload"
+}
+
 func TestJsonApiToggle(t *testing.T) {
 	testClient := &testHttpClient{}
 	api := createJsonTestApi(testClient)
@@ -377,7 +381,7 @@ func TestJsonApiToggle(t *testing.T) {
 		t.Fail()
 	}
 	requestBodyBytes := panicErr(ioutil.ReadAll(request.Body)).([]byte)
-	expectedBytes := []byte(`{"toggleableTestPayload":{"ID":12,"Data":"foobar","IsActive":true}}`)
+	expectedBytes := []byte(`{"toggleabletestpayload":{"ID":12,"Data":"foobar","IsActive":true}}`)
 	if !bytes.Equal(expectedBytes, requestBodyBytes) {
 		t.Logf("Expected request body to equal '%s', got '%s'\n", string(expectedBytes), string(requestBodyBytes))
 		t.Fail()

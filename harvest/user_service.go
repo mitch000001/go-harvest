@@ -31,7 +31,7 @@ func (s *UserService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) {
 		values.Add("updated_since", updatedSince.UTC().String())
 		peopleUrl = peopleUrl + "?" + values.Encode()
 	}
-	response, err := s.api.processRequest("GET", peopleUrl, nil)
+	response, err := s.api.ProcessRequest("GET", peopleUrl, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (s *UserService) AllUpdatedSince(updatedSince time.Time) ([]*User, error) {
 }
 
 func (s *UserService) Find(id int) (*User, error) {
-	response, err := s.api.processRequest("GET", fmt.Sprintf("/people/%d", id), nil)
+	response, err := s.api.ProcessRequest("GET", fmt.Sprintf("/people/%d", id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (s *UserService) Create(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := s.api.processRequest("POST", "/people", bytes.NewReader(marshaledUser))
+	response, err := s.api.ProcessRequest("POST", "/people", bytes.NewReader(marshaledUser))
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (s *UserService) ResetPassword(user *User) error {
 	if err != nil {
 		return err
 	}
-	_, err = s.api.processRequest("POST", fmt.Sprintf("/people/%d/reset_password", user.Id), bytes.NewBuffer(marshaledUser))
+	_, err = s.api.ProcessRequest("POST", fmt.Sprintf("/people/%d/reset_password", user.Id), bytes.NewBuffer(marshaledUser))
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (s *UserService) Update(user *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := s.api.processRequest("PUT", fmt.Sprintf("/people/%d", user.Id), bytes.NewBuffer(marshaledUser))
+	response, err := s.api.ProcessRequest("PUT", fmt.Sprintf("/people/%d", user.Id), bytes.NewBuffer(marshaledUser))
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (s *UserService) Update(user *User) (*User, error) {
 }
 
 func (s *UserService) Delete(user *User) (bool, error) {
-	response, err := s.api.processRequest("DELETE", fmt.Sprintf("/people/%d", user.Id), nil)
+	response, err := s.api.ProcessRequest("DELETE", fmt.Sprintf("/people/%d", user.Id), nil)
 	if err != nil {
 		return false, err
 	}
@@ -158,7 +158,7 @@ func (s *UserService) Delete(user *User) (bool, error) {
 }
 
 func (s *UserService) Toggle(user *User) (bool, error) {
-	response, err := s.api.processRequest("POST", fmt.Sprintf("/people/%d", user.Id), nil)
+	response, err := s.api.ProcessRequest("POST", fmt.Sprintf("/people/%d", user.Id), nil)
 	if err != nil {
 		return false, err
 	}

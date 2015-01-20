@@ -102,6 +102,10 @@ type testPayload struct {
 	Data string
 }
 
+func (t *testPayload) Type() string {
+	return "testPayload"
+}
+
 func (t *testPayload) Id() int {
 	return t.ID
 }

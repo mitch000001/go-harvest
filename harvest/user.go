@@ -21,6 +21,10 @@ type User struct {
 	CreatedAt                    time.Time `json:"created_at,omitempty"`
 }
 
+func (u *User) Type() string {
+	return "User"
+}
+
 func (u *User) Id() int {
 	return u.ID
 }
