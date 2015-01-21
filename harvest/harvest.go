@@ -63,7 +63,7 @@ type Harvest struct {
 }
 
 func (h *Harvest) Account() (*Account, error) {
-	response, err := h.api.ProcessRequest("GET", "/account/who_am_i", nil)
+	response, err := h.api.Process("GET", "/account/who_am_i", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +72,7 @@ func (h *Harvest) Account() (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("Account json: '%s'\n", string(responseBytes))
 	account := Account{}
 	err = json.Unmarshal(responseBytes, &account)
 	if err != nil {

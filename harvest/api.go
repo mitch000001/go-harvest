@@ -27,7 +27,7 @@ type HttpClient interface {
 }
 
 type RequestProcessor interface {
-	ProcessRequest(method string, path string, body io.Reader) (*http.Response, error)
+	Process(method string, path string, body io.Reader) (*http.Response, error)
 }
 
 type CrudEndpoint interface {
@@ -100,7 +100,7 @@ type JsonApi struct {
 	Client  func() HttpClient // HTTP Client to do the requests
 }
 
-func (a *JsonApi) ProcessRequest(method string, path string, body io.Reader) (*http.Response, error) {
+func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Response, error) {
 	requestUrl, err := a.baseUrl.Parse(path)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (a *JsonApi) All(data interface{}, params url.Values) error {
 	if params != nil {
 		completePath += "?" + params.Encode()
 	}
-	response, err := a.ProcessRequest("GET", completePath, nil)
+	response, err := a.Process("GET", completePath, nil)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (a *JsonApi) Find(id interface{}, data interface{}, params url.Values) erro
 	if params != nil {
 		completePath += "?" + params.Encode()
 	}
-	response, err := a.ProcessRequest("GET", completePath, nil)
+	response, err := a.Process("GET", completePath, nil)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (a *JsonApi) Create(data CrudModel) error {
 		return err
 	}
 
-	response, err := a.ProcessRequest("POST", a.path, bytes.NewReader(marshaledPayload))
+	response, err := a.Process("POST", a.path, bytes.NewReader(marshaledPayload))
 	if err != nil {
 		return err
 	}
@@ -264,7 +264,7 @@ func (a *JsonApi) Update(data CrudModel) error {
 	if err != nil {
 		return err
 	}
-	response, err := a.ProcessRequest("PUT", fmt.Sprintf(updateTemplate, id), bytes.NewReader(marshaledPayload))
+	response, err := a.Process("PUT", fmt.Sprintf(updateTemplate, id), bytes.NewReader(marshaledPayload))
 	if err != nil {
 		return err
 	}
@@ -302,7 +302,7 @@ func (a *JsonApi) Delete(data CrudModel) error {
 		return err
 	}
 
-	response, err := a.ProcessRequest("DELETE", fmt.Sprintf(deleteTemplate, id), bytes.NewReader(marshaledPayload))
+	response, err := a.Process("DELETE", fmt.Sprintf(deleteTemplate, id), bytes.NewReader(marshaledPayload))
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func (a *JsonApi) Toggle(data ActiveTogglerCrudModel) error {
 		return err
 	}
 
-	response, err := a.ProcessRequest("POST", fmt.Sprintf(toggleTemplate, id), bytes.NewReader(marshaledPayload))
+	response, err := a.Process("POST", fmt.Sprintf(toggleTemplate, id), bytes.NewReader(marshaledPayload))
 	if err != nil {
 		return err
 	}

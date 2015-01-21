@@ -16,4 +16,6 @@ func TestAccountInformation(t *testing.T) {
 		t.Fatal("Expected account not to be nil")
 	}
 	t.Logf("Account: %+#v\n", account)
+	t.Logf("Account company: %+#v\n", account.Company)
+	t.Logf("Account user: %+#v\n", account.User)
 }

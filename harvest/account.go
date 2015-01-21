@@ -1,8 +1,6 @@
 package harvest
 
-import (
-	"strconv"
-)
+import "strconv"
 
 type Account struct {
 	Company *Company `json:"company,omitempty"`

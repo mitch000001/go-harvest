@@ -22,7 +22,7 @@ func TestJsonApiProcessRequest(t *testing.T) {
 	body := bytes.NewReader(bodyContent)
 
 	// Test
-	_, err := api.ProcessRequest(requestMethod, path, body)
+	_, err := api.Process(requestMethod, path, body)
 
 	// Expectations
 	if err != nil {

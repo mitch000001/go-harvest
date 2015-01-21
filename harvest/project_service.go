@@ -20,7 +20,7 @@ func NewProjectService(api *JsonApi) *ProjectService {
 }
 
 func (p *ProjectService) All() ([]*Project, error) {
-	response, err := p.api.ProcessRequest("GET", "/projects", nil)
+	response, err := p.api.Process("GET", "/projects", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (p *ProjectService) AllUpdatedSince(updatedSince time.Time) ([]*Project, er
 	if len(params) > 0 {
 		query = "?" + params.Encode()
 	}
-	response, err := p.api.ProcessRequest("GET", fmt.Sprintf("/projects%s", query), nil)
+	response, err := p.api.Process("GET", fmt.Sprintf("/projects%s", query), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (p *ProjectService) AllUpdatedSince(updatedSince time.Time) ([]*Project, er
 }
 
 func (p *ProjectService) Find(id int) (*Project, error) {
-	response, err := p.api.ProcessRequest("GET", fmt.Sprintf("/projects/%d", id), nil)
+	response, err := p.api.Process("GET", fmt.Sprintf("/projects/%d", id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (p *ProjectService) Create(project *Project) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := p.api.ProcessRequest("POST", "/projects", bytes.NewReader(marshaledProject))
+	response, err := p.api.Process("POST", "/projects", bytes.NewReader(marshaledProject))
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (p *ProjectService) Create(project *Project) (*Project, error) {
 }
 
 func (p *ProjectService) Delete(project *Project) (bool, error) {
-	response, err := p.api.ProcessRequest("DELETE", fmt.Sprintf("/projects/%d", project.Id), nil)
+	response, err := p.api.Process("DELETE", fmt.Sprintf("/projects/%d", project.Id), nil)
 	if err != nil {
 		return false, err
 	}
@@ -147,7 +147,7 @@ func (p *ProjectService) Update(project *Project) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := p.api.ProcessRequest("PUT", fmt.Sprintf("/projects/%d", project.Id), bytes.NewReader(marshaledProject))
+	response, err := p.api.Process("PUT", fmt.Sprintf("/projects/%d", project.Id), bytes.NewReader(marshaledProject))
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (p *ProjectService) Update(project *Project) (*Project, error) {
 }
 
 func (p *ProjectService) Toggle(project *Project) error {
-	response, err := p.api.ProcessRequest("PUT", fmt.Sprintf("/projects/%d/toggle", project.Id), nil)
+	response, err := p.api.Process("PUT", fmt.Sprintf("/projects/%d/toggle", project.Id), nil)
 	if err != nil {
 		return err
 	}
