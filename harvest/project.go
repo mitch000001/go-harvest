@@ -2,31 +2,25 @@ package harvest
 
 import (
 	"encoding/json"
+	"strconv"
 	"time"
 )
 
-type ShortDate time.Time
-
-func (date ShortDate) IsZero() bool {
-	return time.Time(date).IsZero()
+type ShortDate struct {
+	time.Time
 }
 
-func (date ShortDate) MarshalJSON() ([]byte, error) {
+func (date *ShortDate) MarshalJSON() ([]byte, error) {
 	if date.IsZero() {
 		return json.Marshal("")
 	}
-	return json.Marshal(time.Time(date).Format("2006-01-02"))
+	return json.Marshal(date.Format("2006-01-02"))
 }
 
 func (date *ShortDate) UnmarshalJSON(data []byte) error {
-	strDate := string(data)
-	time, err := time.Parse("2006-01-02", strDate[1:len(strDate)-1])
-	if err != nil {
-		date = &ShortDate{}
-		err = nil
-	} else {
-		*date = ShortDate(time)
-	}
+	unquotedData, _ := strconv.Unquote(string(data))
+	time, err := time.Parse("2006-01-02", unquotedData)
+	date.Time = time
 	return err
 }
 

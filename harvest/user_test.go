@@ -50,3 +50,12 @@ func TestUserToggleActive(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestUserType(t *testing.T) {
+	typ := (&User{}).Type()
+
+	if typ != "User" {
+		t.Logf("Expected Type to equal 'User', got '%s'\n", typ)
+		t.Fail()
+	}
+}

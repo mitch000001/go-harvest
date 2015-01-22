@@ -3,6 +3,8 @@ package harvest
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -49,39 +51,21 @@ func (tf Timeframe) MarshalJSON() ([]byte, error) {
 	if tf.StartDate.IsZero() || tf.EndDate.IsZero() {
 		return json.Marshal("")
 	}
-	return json.Marshal(fmt.Sprintf("%s,%s", time.Time(tf.StartDate).Format("2006-01-02"), time.Time(tf.EndDate).Format("2006-01-02")))
+	return json.Marshal(fmt.Sprintf("%s,%s", tf.StartDate.Format("2006-01-02"), tf.EndDate.Format("2006-01-02")))
 }
 
 func (tf *Timeframe) UnmarshalJSON(data []byte) error {
-	strDate := string(data)
-	var startDateString string
-	var endDateString string
-	_, err := fmt.Sscanf(strDate, "\"%s,%s\"", &startDateString, &endDateString)
-	if err != nil {
+	unquotedData, _ := strconv.Unquote(string(data))
+	dates := strings.Split(unquotedData, ",")
+	if len(dates) != 2 {
 		tf = &Timeframe{}
 		return nil
 	}
-	var startDate ShortDate
-	var endDate ShortDate
-	startTime, err := time.Parse("2006-01-02", startDateString)
-	if err != nil {
-		startDate = ShortDate{}
-		err = nil
-	} else {
-		startDate = ShortDate(startTime)
-	}
-	endTime, err := time.Parse("2006-01-02", startDateString)
-	if err != nil {
-		endDate = ShortDate{}
-		err = nil
-	} else {
-		endDate = ShortDate(endTime)
-	}
-	if startDate.IsZero() || endDate.IsZero() {
-		tf = &Timeframe{}
-	} else {
-		tf = &Timeframe{StartDate: startDate, EndDate: endDate}
-	}
+	startTime, _ := time.Parse("2006-01-02", dates[0])
+	startDate := ShortDate{startTime}
+	endTime, _ := time.Parse("2006-01-02", dates[1])
+	endDate := ShortDate{endTime}
+	tf = &Timeframe{StartDate: startDate, EndDate: endDate}
 	return nil
 }
 
