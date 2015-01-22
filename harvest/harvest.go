@@ -115,7 +115,7 @@ func (n NotFoundError) NotFound() bool {
 	return true
 }
 
-func isNotFound(err error) bool {
+func IsNotFound(err error) bool {
 	if e, ok := err.(NotFound); ok {
 		return e.NotFound()
 	}
