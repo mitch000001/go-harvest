@@ -1,6 +1,9 @@
 package harvest
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestParseSubdomain(t *testing.T) {
 	// Happy path
@@ -83,6 +86,83 @@ func TestNewHarvest(t *testing.T) {
 
 	if client != nil {
 		t.Logf("Expected returning client to be nil\n")
+		t.Fail()
+	}
+}
+
+func TestNotFound(t *testing.T) {
+	notFoundError := notFound("foo")
+
+	errMessage := notFoundError.Error()
+
+	expectedMessage := "foo"
+
+	if errMessage != expectedMessage {
+		t.Logf("Expected message to equal 'q', got '%q'\n", expectedMessage, errMessage)
+		t.Fail()
+	}
+
+	// No message given
+	notFoundError = notFound("")
+
+	errMessage = notFoundError.Error()
+
+	expectedMessage = "Not found"
+
+	if errMessage != expectedMessage {
+		t.Logf("Expected message to equal 'q', got '%q'\n", expectedMessage, errMessage)
+		t.Fail()
+	}
+}
+
+func TestNotFoundNotFound(t *testing.T) {
+	notFoundError := notFound("")
+
+	ok := notFoundError.NotFound()
+
+	if !ok {
+		t.Logf("Expected NotFound to return true, got false\n")
+		t.Fail()
+	}
+}
+
+type found string
+
+func (f found) Error() string {
+	return string(f)
+}
+
+func (f found) NotFound() bool {
+	return false
+}
+
+func TestIsNotFound(t *testing.T) {
+	notFoundError := notFound("")
+
+	ok := IsNotFound(notFoundError)
+
+	if !ok {
+		t.Logf("Expected IsNotFound to return true, got false\n")
+		t.Fail()
+	}
+
+	// Any other error
+	err := fmt.Errorf("foo")
+
+	ok = IsNotFound(err)
+
+	if ok {
+		t.Logf("Expected IsNotFound to return false, got true\n")
+		t.Fail()
+	}
+
+	// An error implementing NotFound
+	err = found("baz")
+
+	ok = IsNotFound(err)
+
+	if ok {
+		t.Logf("Expected IsNotFound to return false, got true\n")
 		t.Fail()
 	}
 }
