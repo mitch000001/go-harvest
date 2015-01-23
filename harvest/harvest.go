@@ -50,6 +50,7 @@ func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, 
 	h.Users = NewUserService(api)
 	h.Projects = NewProjectService(api)
 	h.Clients = NewClientService(api)
+	h.Tasks = NewTaskService(api, api)
 	return h, nil
 }
 
@@ -60,6 +61,7 @@ type Harvest struct {
 	Users    *UserService
 	Projects *ProjectService
 	Clients  *ClientService
+	Tasks    *TaskService
 }
 
 func (h *Harvest) Account() (*Account, error) {

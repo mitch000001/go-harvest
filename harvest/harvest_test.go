@@ -76,6 +76,11 @@ func TestNewHarvest(t *testing.T) {
 		t.Fail()
 	}
 
+	if client.Tasks == nil {
+		t.Logf("Expected tasks service not to be nil")
+		t.Fail()
+	}
+
 	// wrong kind of subdomain
 	client, err = NewHarvest("", testClientProvider)
 
