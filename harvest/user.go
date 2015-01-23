@@ -2,7 +2,7 @@ package harvest
 
 import "time"
 
-//go:generate go run ../cmd/api_gen/api_gen.go -type=User
+//go:generate go run ../cmd/api_gen/api_gen.go -type=User -c -t
 
 type User struct {
 	ID                           int       `json:"id,omitempty"`

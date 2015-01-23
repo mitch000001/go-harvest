@@ -44,7 +44,6 @@ var (
 				expectedErrorMessage: "ERR",
 			},
 			testApiCreateWrapper,
-
 			[]interface{}{&Project{}},
 		},
 		"Update": {
@@ -53,7 +52,6 @@ var (
 				expectedErrorMessage: "ERR",
 			},
 			testApiUpdateWrapper,
-
 			[]interface{}{&Project{}},
 		},
 		"Delete": {
@@ -62,7 +60,6 @@ var (
 				expectedErrorMessage: "ERR",
 			},
 			testApiDeleteWrapper,
-
 			[]interface{}{&Project{}},
 		},
 		"Toggle": {
@@ -71,7 +68,6 @@ var (
 				expectedErrorMessage: "ERR",
 			},
 			testApiToggleWrapper,
-
 			[]interface{}{&Project{}},
 		},
 	}
@@ -109,7 +105,7 @@ func testProjectServiceMethod(t *testing.T, name string) {
 		t.FailNow()
 	}
 	api := test.testFn(test.testData, &called)
-	service := NewProjectService(api)
+	service := &ProjectService{endpoint: api}
 	serviceValue := reflect.ValueOf(service)
 	testFn := serviceValue.MethodByName(name)
 	if !testFn.IsValid() {

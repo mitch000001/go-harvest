@@ -14,7 +14,9 @@ type ProjectService struct {
 }
 
 func NewProjectService(endpoint CrudTogglerEndpoint) *ProjectService {
-	service := ProjectService{endpoint: endpoint}
+	service := ProjectService{
+		endpoint: endpoint,
+	}
 	return &service
 }
 

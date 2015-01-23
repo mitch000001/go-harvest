@@ -14,7 +14,9 @@ type ClientService struct {
 }
 
 func NewClientService(endpoint CrudTogglerEndpoint) *ClientService {
-	service := ClientService{endpoint: endpoint}
+	service := ClientService{
+		endpoint: endpoint,
+	}
 	return &service
 }
 

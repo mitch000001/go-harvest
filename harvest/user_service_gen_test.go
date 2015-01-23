@@ -44,7 +44,6 @@ var (
 				expectedErrorMessage: "ERR",
 			},
 			testApiCreateWrapper,
-
 			[]interface{}{&User{}},
 		},
 		"Update": {
@@ -53,7 +52,6 @@ var (
 				expectedErrorMessage: "ERR",
 			},
 			testApiUpdateWrapper,
-
 			[]interface{}{&User{}},
 		},
 		"Delete": {
@@ -62,7 +60,6 @@ var (
 				expectedErrorMessage: "ERR",
 			},
 			testApiDeleteWrapper,
-
 			[]interface{}{&User{}},
 		},
 		"Toggle": {
@@ -71,7 +68,6 @@ var (
 				expectedErrorMessage: "ERR",
 			},
 			testApiToggleWrapper,
-
 			[]interface{}{&User{}},
 		},
 	}
@@ -109,7 +105,7 @@ func testUserServiceMethod(t *testing.T, name string) {
 		t.FailNow()
 	}
 	api := test.testFn(test.testData, &called)
-	service := NewUserService(api)
+	service := &UserService{endpoint: api}
 	serviceValue := reflect.ValueOf(service)
 	testFn := serviceValue.MethodByName(name)
 	if !testFn.IsValid() {

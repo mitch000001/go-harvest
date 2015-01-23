@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-//go:generate go run ../cmd/api_gen/api_gen.go -type=Client
+//go:generate go run ../cmd/api_gen/api_gen.go -type=Client -c -t
 
 type Client struct {
 	Name                    string    `json:"name,omitempty"`
