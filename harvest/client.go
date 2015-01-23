@@ -58,14 +58,18 @@ func (tf *Timeframe) UnmarshalJSON(data []byte) error {
 	unquotedData, _ := strconv.Unquote(string(data))
 	dates := strings.Split(unquotedData, ",")
 	if len(dates) != 2 {
-		tf = &Timeframe{}
+		*tf = Timeframe{}
 		return nil
 	}
-	startTime, _ := time.Parse("2006-01-02", dates[0])
+	startTime, err1 := time.Parse("2006-01-02", dates[0])
 	startDate := ShortDate{startTime}
-	endTime, _ := time.Parse("2006-01-02", dates[1])
+	endTime, err2 := time.Parse("2006-01-02", dates[1])
 	endDate := ShortDate{endTime}
-	tf = &Timeframe{StartDate: startDate, EndDate: endDate}
+	if err1 != nil || err2 != nil {
+		*tf = Timeframe{}
+		return nil
+	}
+	*tf = Timeframe{StartDate: startDate, EndDate: endDate}
 	return nil
 }
 

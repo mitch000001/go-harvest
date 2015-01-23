@@ -107,18 +107,17 @@ func TestTimeframeMarshalJSON(t *testing.T) {
 }
 
 func TestTimeframeUnmarshalJSON(t *testing.T) {
-	// startDate := ShortDate{time.Date(2014, time.February, 01, 0, 0, 0, 0, time.UTC)}
-	// endDate := ShortDate{time.Date(2014, time.April, 01, 0, 0, 0, 0, time.UTC)}
+	startDate := ShortDate{time.Date(2014, time.February, 01, 0, 0, 0, 0, time.UTC)}
+	endDate := ShortDate{time.Date(2014, time.April, 01, 0, 0, 0, 0, time.UTC)}
 
 	var tests = []struct {
 		testJson          string
 		expectedTimeframe Timeframe
 	}{
-		// TODO: happy path doesn't work?!
-		// {
-		// 	`"2014-02-01,2014-04-01"`,
-		// 	Timeframe{StartDate: startDate, EndDate: endDate},
-		// },
+		{
+			`"2014-02-01,2014-04-01"`,
+			Timeframe{StartDate: startDate, EndDate: endDate},
+		},
 		{
 			`"2014-02-01,"`,
 			Timeframe{},
