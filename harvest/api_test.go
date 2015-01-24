@@ -81,8 +81,8 @@ func (t *testHttpClient) setResponsePayload(statusCode int, header http.Header, 
 		panic(err)
 	}
 	payload := &JsonApiPayload{
-		Name:  "Test",
-		Value: testJson,
+		name:           "Test",
+		marshaledValue: testJson,
 	}
 	marshaled, err := json.Marshal(&payload)
 	if err != nil {
@@ -103,8 +103,8 @@ func (t *testHttpClient) setResponsePayloadAsArray(statusCode int, data interfac
 	}
 	payload := []*JsonApiPayload{
 		&JsonApiPayload{
-			Name:  "Test",
-			Value: testJson,
+			name:           "Test",
+			marshaledValue: testJson,
 		},
 	}
 	marshaled, err := json.Marshal(&payload)

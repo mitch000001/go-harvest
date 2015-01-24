@@ -14,12 +14,27 @@ import (
 var apiPayloadJSONTemplate string = `{"%s":%s}`
 
 type JsonApiPayload struct {
-	Name  string
-	Value json.RawMessage
+	name           string
+	marshaledValue json.RawMessage
+}
+
+func NewJsonApiPayload(name string, marshaledValue json.RawMessage) *JsonApiPayload {
+	return &JsonApiPayload{
+		name:           name,
+		marshaledValue: marshaledValue,
+	}
+}
+
+func (a *JsonApiPayload) Name() string {
+	return a.name
+}
+
+func (a *JsonApiPayload) MarshaledValue() *json.RawMessage {
+	return &a.marshaledValue
 }
 
 func (a *JsonApiPayload) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(apiPayloadJSONTemplate, a.Name, a.Value)), nil
+	return []byte(fmt.Sprintf(apiPayloadJSONTemplate, a.name, a.marshaledValue)), nil
 }
 
 func (a *JsonApiPayload) UnmarshalJSON(data []byte) error {
@@ -30,14 +45,14 @@ func (a *JsonApiPayload) UnmarshalJSON(data []byte) error {
 	}
 	m := f.(map[string]interface{})
 	for k := range m {
-		a.Name = k
+		a.name = k
 	}
-	val := m[a.Name]
+	val := m[a.name]
 	raw, err := json.Marshal(val)
 	if err != nil {
 		return err
 	}
-	a.Value = raw
+	a.marshaledValue = raw
 	return nil
 }
 
@@ -92,7 +107,7 @@ func (a *JsonApi) All(data interface{}, params url.Values) error {
 	}
 	var rawPayloads []*json.RawMessage
 	for _, p := range payload {
-		rawPayloads = append(rawPayloads, &p.Value)
+		rawPayloads = append(rawPayloads, p.MarshaledValue())
 	}
 	marshaled, err := json.Marshal(&rawPayloads)
 	if err != nil {
@@ -139,7 +154,7 @@ func (a *JsonApi) Find(id interface{}, data interface{}, params url.Values) erro
 	if err != nil {
 		return err
 	}
-	marshaled, err := json.Marshal(&payload.Value)
+	marshaled, err := json.Marshal(payload.MarshaledValue())
 	if err != nil {
 		return err
 	}
@@ -157,8 +172,8 @@ func (a *JsonApi) Create(data CrudModel) error {
 		return err
 	}
 	requestPayload := &JsonApiPayload{
-		Name:  strings.ToLower(data.Type()),
-		Value: marshaledData,
+		name:           strings.ToLower(data.Type()),
+		marshaledValue: marshaledData,
 	}
 	marshaledPayload, err := json.Marshal(&requestPayload)
 	if err != nil {
@@ -204,8 +219,8 @@ func (a *JsonApi) Update(data CrudModel) error {
 		return err
 	}
 	requestPayload := &JsonApiPayload{
-		Name:  strings.ToLower(data.Type()),
-		Value: marshaledData,
+		name:           strings.ToLower(data.Type()),
+		marshaledValue: marshaledData,
 	}
 	marshaledPayload, err := json.Marshal(&requestPayload)
 	if err != nil {
@@ -241,8 +256,8 @@ func (a *JsonApi) Delete(data CrudModel) error {
 		return err
 	}
 	requestPayload := &JsonApiPayload{
-		Name:  strings.ToLower(data.Type()),
-		Value: marshaledData,
+		name:           strings.ToLower(data.Type()),
+		marshaledValue: marshaledData,
 	}
 	marshaledPayload, err := json.Marshal(&requestPayload)
 	if err != nil {
@@ -278,8 +293,8 @@ func (a *JsonApi) Toggle(data ActiveTogglerCrudModel) error {
 		return err
 	}
 	requestPayload := &JsonApiPayload{
-		Name:  strings.ToLower(data.Type()),
-		Value: marshaledData,
+		name:           strings.ToLower(data.Type()),
+		marshaledValue: marshaledData,
 	}
 	marshaledPayload, err := json.Marshal(&requestPayload)
 	if err != nil {
