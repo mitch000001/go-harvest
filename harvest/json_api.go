@@ -16,12 +16,14 @@ var apiPayloadJSONTemplate string = `{"%s":%s}`
 type JsonApiPayload struct {
 	name           string
 	marshaledValue json.RawMessage
+	value          interface{}
 }
 
-func NewJsonApiPayload(name string, marshaledValue json.RawMessage) *JsonApiPayload {
+func NewJsonApiPayload(name string, marshaledValue json.RawMessage, value interface{}) *JsonApiPayload {
 	return &JsonApiPayload{
 		name:           name,
 		marshaledValue: marshaledValue,
+		value:          value,
 	}
 }
 
@@ -31,6 +33,10 @@ func (a *JsonApiPayload) Name() string {
 
 func (a *JsonApiPayload) MarshaledValue() *json.RawMessage {
 	return &a.marshaledValue
+}
+
+func (a *JsonApiPayload) Value() interface{} {
+	return a.value
 }
 
 func (a *JsonApiPayload) MarshalJSON() ([]byte, error) {

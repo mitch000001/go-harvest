@@ -16,8 +16,9 @@ import (
 func TestNewJsonApiPayload(t *testing.T) {
 	name := "foo"
 	marshaledValue := []byte("bar")
+	value := "bar"
 
-	payload := NewJsonApiPayload(name, marshaledValue)
+	payload := NewJsonApiPayload(name, marshaledValue, &value)
 
 	if payload.name != name {
 		t.Logf("Expected name to equal '%q', got '%q'\n", name, payload.name)
@@ -30,13 +31,21 @@ func TestNewJsonApiPayload(t *testing.T) {
 		t.Logf("Expected marshaledValue to equal '%q', got '%q'\n", string(marshaledValue), string(payload.marshaledValue))
 		t.Fail()
 	}
+
+	if !reflect.DeepEqual(payload.value, &value) {
+		t.Logf("Expected value to equal '%+#v', got '%+#v'\n", &value, payload.value)
+		t.Fail()
+	}
 }
 
 func TestJsonApiPayloadName(t *testing.T) {
 	name := "foo"
 	marshaledValue := []byte("bar")
 
-	payload := NewJsonApiPayload(name, marshaledValue)
+	payload := &JsonApiPayload{
+		name:           name,
+		marshaledValue: marshaledValue,
+	}
 
 	actualName := payload.Name()
 
@@ -50,7 +59,10 @@ func TestJsonApiPayloadMarshaledValue(t *testing.T) {
 	name := "foo"
 	marshaledValue := []byte("bar")
 
-	payload := NewJsonApiPayload(name, marshaledValue)
+	payload := &JsonApiPayload{
+		name:           name,
+		marshaledValue: marshaledValue,
+	}
 
 	actualMarshaledValue := payload.MarshaledValue()
 
@@ -60,6 +72,26 @@ func TestJsonApiPayloadMarshaledValue(t *testing.T) {
 		t.Logf("Expected marshaledValue to equal '%q', got '%q'\n", string(marshaledValue), string(*actualMarshaledValue))
 		t.Fail()
 	}
+}
+
+func TestJsonApiPayloadValue(t *testing.T) {
+	name := "foo"
+	marshaledValue := []byte("bar")
+	value := "bar"
+
+	payload := &JsonApiPayload{
+		name:           name,
+		marshaledValue: marshaledValue,
+		value:          &value,
+	}
+
+	actualValue := payload.Value()
+
+	if !reflect.DeepEqual(actualValue, &value) {
+		t.Logf("Expected value to equal '%+#v', got '%+#v'\n", &value, actualValue)
+		t.Fail()
+	}
+
 }
 
 func TestJsonApiPayloadMarshalJSON(t *testing.T) {
