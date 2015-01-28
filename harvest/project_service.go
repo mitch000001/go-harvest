@@ -1,4 +1,4 @@
-// +build integration
+// +build feature
 
 package harvest
 
