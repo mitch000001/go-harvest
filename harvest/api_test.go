@@ -88,12 +88,10 @@ func (t *testHttpClient) setResponsePayload(statusCode int, header http.Header, 
 	if err != nil {
 		panic(err)
 	}
-	if t.testResponse == nil {
-		t.testResponse = &http.Response{}
+	t.setResponseBody(statusCode, ioutil.NopCloser(bytes.NewBuffer(marshaled)))
+	for k, v := range header {
+		t.testResponse.Header[k] = v
 	}
-	t.testResponse.StatusCode = statusCode
-	t.testResponse.Body = ioutil.NopCloser(bytes.NewBuffer(marshaled))
-	t.testResponse.Header = header
 }
 
 func (t *testHttpClient) setResponsePayloadAsArray(statusCode int, data interface{}) {
@@ -111,11 +109,7 @@ func (t *testHttpClient) setResponsePayloadAsArray(statusCode int, data interfac
 	if err != nil {
 		panic(err)
 	}
-	if t.testResponse == nil {
-		t.testResponse = &http.Response{}
-	}
-	t.testResponse.StatusCode = statusCode
-	t.testResponse.Body = ioutil.NopCloser(bytes.NewBuffer(marshaled))
+	t.setResponseBody(statusCode, ioutil.NopCloser(bytes.NewBuffer(marshaled)))
 }
 
 func (t *testHttpClient) setResponseBody(statusCode int, body io.ReadCloser) {
@@ -124,6 +118,9 @@ func (t *testHttpClient) setResponseBody(statusCode int, body io.ReadCloser) {
 	}
 	t.testResponse.StatusCode = statusCode
 	t.testResponse.Body = body
+	header := make(http.Header, 0)
+	header.Add("Content-Type", "application/json; charset=utf-8")
+	t.testResponse.Header = header
 }
 
 func panicErr(input interface{}, err error) interface{} {

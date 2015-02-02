@@ -68,6 +68,14 @@ type JsonApi struct {
 	Client  func() HttpClient // HTTP Client to do the requests
 }
 
+func (a *JsonApi) forPath(path string) *JsonApi {
+	return &JsonApi{
+		baseUrl: a.baseUrl,
+		path:    path,
+		Client:  a.Client,
+	}
+}
+
 func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Response, error) {
 	requestUrl, err := a.baseUrl.Parse(path)
 	if err != nil {
@@ -77,11 +85,14 @@ func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Res
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
+	request.Header.Set("Content-Type", "application/json; charset=utf-8")
+	request.Header.Set("Accept", "application/json; charset=utf-8")
 	response, err := a.Client().Do(request)
 	if err != nil {
 		return nil, err
+	}
+	if ct := response.Header.Get("Content-Type"); ct != "application/json; charset=utf-8" {
+		return nil, fmt.Errorf("Bad Request: \nResponse has wrong Content-Type '%q'\nRequest: %+#v\nRequest URL: %s\n", ct, request, request.URL)
 	}
 	return response, nil
 }

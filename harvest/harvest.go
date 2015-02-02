@@ -47,10 +47,10 @@ func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, 
 		baseUrl: baseUrl,
 		api:     api,
 	}
-	h.Users = NewUserService(api)
-	h.Projects = NewProjectService(api)
-	h.Clients = NewClientService(api)
-	h.Tasks = NewTaskService(api, api)
+	h.Users = NewUserService(api.forPath("people"))
+	h.Projects = NewProjectService(api.forPath("projects"))
+	h.Clients = NewClientService(api.forPath("clients"))
+	h.Tasks = NewTaskService(api.forPath("tasks"), api.forPath("tasks"))
 	return h, nil
 }
 

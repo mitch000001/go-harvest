@@ -156,6 +156,7 @@ func TestJsonApiPayloadUnmarshalJSON(t *testing.T) {
 
 func TestJsonApiProcessRequest(t *testing.T) {
 	testClient := &testHttpClient{}
+	testClient.setResponseBody(http.StatusOK, emptyReadCloser())
 	api := createJsonTestApi(testClient)
 
 	path := "qux"
@@ -173,8 +174,8 @@ func TestJsonApiProcessRequest(t *testing.T) {
 	}
 
 	expectedHeader := http.Header{
-		"Content-Type": []string{"application/json"},
-		"Accept":       []string{"application/json"},
+		"Content-Type": []string{"application/json; charset=utf-8"},
+		"Accept":       []string{"application/json; charset=utf-8"},
 	}
 
 	testClient.testRequestFor(t, map[string]interface{}{
@@ -338,11 +339,7 @@ func TestJsonApiCreate(t *testing.T) {
 	// test invalid data
 	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
-	response := &http.Response{
-		StatusCode: http.StatusBadRequest,
-		Body:       bytesToReadCloser(bodyBytes),
-	}
-	testClient.testResponse = response
+	testClient.setResponseBody(http.StatusBadRequest, bytesToReadCloser(bodyBytes))
 
 	err = api.Create(&testData)
 
@@ -397,11 +394,7 @@ func TestJsonApiUpdate(t *testing.T) {
 	// Failing update
 	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
-	response := &http.Response{
-		StatusCode: http.StatusBadRequest,
-		Body:       bytesToReadCloser(bodyBytes),
-	}
-	testClient.testResponse = response
+	testClient.setResponseBody(http.StatusBadRequest, bytesToReadCloser(bodyBytes))
 
 	err = api.Update(&testData)
 
@@ -456,11 +449,7 @@ func TestJsonApiDelete(t *testing.T) {
 	// Failing delete
 	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
-	response := &http.Response{
-		StatusCode: http.StatusBadRequest,
-		Body:       bytesToReadCloser(bodyBytes),
-	}
-	testClient.testResponse = response
+	testClient.setResponseBody(http.StatusBadRequest, bytesToReadCloser(bodyBytes))
 
 	err = api.Delete(&testData)
 
@@ -537,11 +526,7 @@ func TestJsonApiToggle(t *testing.T) {
 	testData.IsActive = true
 	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
-	response := &http.Response{
-		StatusCode: http.StatusBadRequest,
-		Body:       bytesToReadCloser(bodyBytes),
-	}
-	testClient.testResponse = response
+	testClient.setResponseBody(http.StatusBadRequest, bytesToReadCloser(bodyBytes))
 
 	err = api.Toggle(&testData)
 
