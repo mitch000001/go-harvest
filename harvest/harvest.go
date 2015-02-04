@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -39,9 +41,12 @@ func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, 
 	if err != nil {
 		return nil, err
 	}
+	logger := log.New(os.Stdout, "harvest: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger.Printf("Base URL: %s\n", baseUrl)
 	api := &JsonApi{
 		Client:  clientProvider.Client,
 		baseUrl: baseUrl,
+		Logger:  logger,
 	}
 	h := &Harvest{
 		baseUrl: baseUrl,
