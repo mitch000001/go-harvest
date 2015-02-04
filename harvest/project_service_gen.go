@@ -10,12 +10,14 @@ import (
 )
 
 type ProjectService struct {
-	endpoint CrudTogglerEndpoint
+	provider	CrudEndpointProvider
+	endpoint	CrudTogglerEndpoint
 }
 
-func NewProjectService(endpoint CrudTogglerEndpoint) *ProjectService {
+func NewProjectService(provider CrudEndpointProvider, endpoint CrudTogglerEndpoint) *ProjectService {
 	service := ProjectService{
-		endpoint: endpoint,
+		provider:	provider,
+		endpoint:	endpoint,
 	}
 	return &service
 }

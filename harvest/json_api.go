@@ -71,6 +71,22 @@ type JsonApi struct {
 	Logger  *log.Logger
 }
 
+func (a *JsonApi) Path() string {
+	return a.path
+}
+
+func (a *JsonApi) CrudEndpoint(path string) CrudEndpoint {
+	return a.forPath(path)
+}
+
+func (a *JsonApi) TogglerEndpoint(path string) TogglerEndpoint {
+	return a.forPath(path)
+}
+
+func (a *JsonApi) CrudTogglerEndpoint(path string) CrudTogglerEndpoint {
+	return a.forPath(path)
+}
+
 func (a *JsonApi) logf(format string, arg ...interface{}) {
 	if a.Logger == nil {
 		a.Logger = log.New(os.Stdout, "harvest: ", log.Ldate|log.Ltime|log.Lshortfile)

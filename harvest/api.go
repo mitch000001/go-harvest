@@ -25,7 +25,28 @@ type RequestProcessor interface {
 	Process(method string, path string, body io.Reader) (*http.Response, error)
 }
 
+type CrudEndpointProvider interface {
+	CrudEndpoint(string) CrudEndpoint
+}
+
+type TogglerEndpointProvider interface {
+	TogglerEndpoint(string) TogglerEndpoint
+}
+
+type CrudTogglerEndpointProvider interface {
+	CrudTogglerEndpoint(string) CrudTogglerEndpoint
+}
+
+type Endpoint interface {
+	Path() string
+}
+
 type CrudEndpoint interface {
+	Crud
+	Endpoint
+}
+
+type Crud interface {
 	All(interface{}, url.Values) error
 	Find(interface{}, interface{}, url.Values) error
 	Create(CrudModel) error
@@ -34,12 +55,18 @@ type CrudEndpoint interface {
 }
 
 type TogglerEndpoint interface {
+	Endpoint
+	Toggler
+}
+
+type Toggler interface {
 	Toggle(ActiveTogglerCrudModel) error
 }
 
 type CrudTogglerEndpoint interface {
-	CrudEndpoint
-	TogglerEndpoint
+	Endpoint
+	Crud
+	Toggler
 }
 
 type ActiveToggler interface {

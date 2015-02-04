@@ -12,60 +12,60 @@ import (
 )
 
 var (
-	expectedClientServiceParams = url.Values{"foo": []string{"bar"}}
+	expectedClientServiceParams	= url.Values{"foo": []string{"bar"}}
 
-	testsClientService = map[string]struct { // apiFn to testData
-		testData *apiWrapperTestData
-		testFn   testFunc
-		args     []interface{}
+	testsClientService	= map[string]struct {	// apiFn to testData
+		testData	*apiWrapperTestData
+		testFn		testFunc
+		args		[]interface{}
 	}{
 		"All": {
 			&apiWrapperTestData{
-				expectedParams:       expectedClientServiceParams,
-				expectedDataType:     reflect.TypeOf(&[]*Client{}),
-				expectedErrorMessage: "ERR",
+				expectedParams:		expectedClientServiceParams,
+				expectedDataType:	reflect.TypeOf(&[]*Client{}),
+				expectedErrorMessage:	"ERR",
 			},
 			testApiAllWrapper,
 			[]interface{}{&[]*Client{}, expectedClientServiceParams},
 		},
 		"Find": {
 			&apiWrapperTestData{
-				expectedParams:       expectedClientServiceParams,
-				expectedIdType:       reflect.TypeOf(12),
-				expectedDataType:     reflect.TypeOf(&Client{}),
-				expectedErrorMessage: "ERR",
+				expectedParams:		expectedClientServiceParams,
+				expectedIdType:		reflect.TypeOf(12),
+				expectedDataType:	reflect.TypeOf(&Client{}),
+				expectedErrorMessage:	"ERR",
 			},
 			testApiFindWrapper,
 			[]interface{}{12, &Client{}, expectedClientServiceParams},
 		},
 		"Create": {
 			&apiWrapperTestData{
-				expectedDataType:     reflect.TypeOf(&Client{}),
-				expectedErrorMessage: "ERR",
+				expectedDataType:	reflect.TypeOf(&Client{}),
+				expectedErrorMessage:	"ERR",
 			},
 			testApiCreateWrapper,
 			[]interface{}{&Client{}},
 		},
 		"Update": {
 			&apiWrapperTestData{
-				expectedDataType:     reflect.TypeOf(&Client{}),
-				expectedErrorMessage: "ERR",
+				expectedDataType:	reflect.TypeOf(&Client{}),
+				expectedErrorMessage:	"ERR",
 			},
 			testApiUpdateWrapper,
 			[]interface{}{&Client{}},
 		},
 		"Delete": {
 			&apiWrapperTestData{
-				expectedDataType:     reflect.TypeOf(&Client{}),
-				expectedErrorMessage: "ERR",
+				expectedDataType:	reflect.TypeOf(&Client{}),
+				expectedErrorMessage:	"ERR",
 			},
 			testApiDeleteWrapper,
 			[]interface{}{&Client{}},
 		},
 		"Toggle": {
 			&apiWrapperTestData{
-				expectedDataType:     reflect.TypeOf(&Client{}),
-				expectedErrorMessage: "ERR",
+				expectedDataType:	reflect.TypeOf(&Client{}),
+				expectedErrorMessage:	"ERR",
 			},
 			testApiToggleWrapper,
 			[]interface{}{&Client{}},

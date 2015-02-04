@@ -315,6 +315,7 @@ func testApiToggle(fn func(ActiveTogglerCrudModel) error) CrudTogglerEndpoint {
 }
 
 type testApi struct {
+	CrudTogglerEndpoint
 	allFn    func(interface{}, url.Values) error
 	findFn   func(interface{}, interface{}, url.Values) error
 	createFn func(CrudModel) error

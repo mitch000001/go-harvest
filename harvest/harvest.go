@@ -52,10 +52,12 @@ func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, 
 		baseUrl: baseUrl,
 		api:     api,
 	}
-	h.Users = NewUserService(api.forPath("people"))
-	h.Projects = NewProjectService(api.forPath("projects"))
-	h.Clients = NewClientService(api.forPath("clients"))
-	h.Tasks = NewTaskService(api.forPath("tasks"), api.forPath("tasks"))
+	h.Users = NewUserService(api.CrudTogglerEndpoint("people"))
+	projectApi := api.CrudTogglerEndpoint("projects")
+	h.Projects = NewProjectService(api, projectApi)
+	h.Clients = NewClientService(api.CrudTogglerEndpoint("clients"))
+	taskApi := api.CrudTogglerEndpoint("tasks")
+	h.Tasks = NewTaskService(taskApi, api)
 	return h, nil
 }
 

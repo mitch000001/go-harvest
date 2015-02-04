@@ -2,7 +2,7 @@ package harvest
 
 import "time"
 
-//go:generate go run ../cmd/api_gen/api_gen.go -type=Task -implements RequestProcessor
+//go:generate go run ../cmd/api_gen/api_gen.go -type=Task -fields RequestProcessor
 
 type Task struct {
 	// If true task will be added as billable upon assigning it to a project

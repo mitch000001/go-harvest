@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"go/parser"
+	"go/printer"
+	"go/token"
 	"os"
-	"os/exec"
 	"strings"
 	"text/template"
 	"unicode"
@@ -12,23 +15,25 @@ import (
 )
 
 var (
-	serviceType           string
-	implementedInterfaces []string
-	crudFlag              bool
-	togglerFlag           bool
-	fileTemplate          = template.New("file")
-	crudTemplate          = template.Must(fileTemplate.New("crud").Parse(crudTemplateContent))
-	testfileTemplate      = template.Must(template.New("testfile").Parse(testFileContent))
-	fileNameTmpl          = "%s_service_gen.go"
-	testfileNameTmpl      = "%s_service_gen_test.go"
+	serviceType      string
+	fields           []string
+	crudFlag         bool
+	togglerFlag      bool
+	scaffoldFlag     bool
+	fileTemplate     = template.New("file")
+	crudTemplate     = template.Must(fileTemplate.New("crud").Parse(crudTemplateContent))
+	testfileTemplate = template.Must(template.New("testfile").Parse(testFileContent))
+	fileNameTmpl     = "%s_service_gen.go"
+	testfileNameTmpl = "%s_service_gen_test.go"
 )
 
 func init() {
 	fileTemplate = template.Must(fileTemplate.Parse(fileTemplateContent))
 	flag.BoolVar(&crudFlag, "c", true, "-c")
 	flag.BoolVar(&togglerFlag, "t", false, "-t")
+	flag.BoolVar(&scaffoldFlag, "s", false, "-s")
 	flag.StringVar(&serviceType, "type", "", `-type="Type"`)
-	flag.Var((*stringsFlag)(&implementedInterfaces), "implements", "-implements 'interface list'")
+	flag.Var((*stringsFlag)(&fields), "fields", "-fields 'field list'")
 }
 
 func main() {
@@ -38,84 +43,96 @@ func main() {
 		os.Exit(1)
 	}
 	if crudFlag && togglerFlag {
-		implementedInterfaces = append(implementedInterfaces, "CrudTogglerEndpoint")
+		fields = append(fields, "CrudTogglerEndpoint")
 	} else {
 		if crudFlag {
-			implementedInterfaces = append(implementedInterfaces, "CrudEndpoint")
+			fields = append(fields, "CrudEndpoint")
 		}
 		if togglerFlag {
-			implementedInterfaces = append(implementedInterfaces, "TogglerEndpoint")
+			fields = append(fields, "TogglerEndpoint")
 		}
 	}
-	if len(implementedInterfaces) == 0 {
-		fmt.Printf("No implementing interfaces given. Aborting...\n")
+	if len(fields) == 0 {
+		fmt.Printf("No implementing fields given. Aborting...\n")
 		os.Exit(1)
 	}
-	mappedInterfaces := mapInterfaces(implementedInterfaces)
+	mappedFields := mapFields(fields)
 	service := &service{
-		Type:       serviceType,
-		Param:      strings.ToLower(serviceType),
-		Interfaces: mappedInterfaces,
-		Crud:       crudFlag,
-		Toggler:    togglerFlag,
+		Type:     serviceType,
+		Param:    strings.ToLower(serviceType),
+		Fields:   mappedFields,
+		Crud:     crudFlag,
+		Toggler:  togglerFlag,
+		Scaffold: scaffoldFlag,
 	}
 	fname := fmt.Sprintf(fileNameTmpl, service.Param)
-	file, err := os.Create(fname)
+	err := writeFile(fname, fileTemplate, service)
 	if err != nil {
-		fmt.Printf("There was an error creating the file: %s\n", fname)
-		fmt.Printf("Error: %v\n", err)
-		os.Exit(1)
-	}
-	err = fileTemplate.Execute(file, service)
-	if err != nil {
-		fmt.Printf("There was an error parsing the given file template.\n")
-		fmt.Printf("Error: %v\n", err)
-		os.Exit(1)
-	}
-	goFmt := exec.Command("go", "fmt", fname)
-	err = goFmt.Run()
-	if err != nil {
-		fmt.Printf("There was an error while running go fmt on generated file '%s'.\n", fname)
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
 	fname = fmt.Sprintf(testfileNameTmpl, service.Param)
-	file, err = os.Create(fname)
+	err = writeFile(fname, testfileTemplate, service)
 	if err != nil {
-		fmt.Printf("There was an error creating the file: %s\n", fname)
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
-	err = testfileTemplate.Execute(file, service)
+}
+
+func writeFile(fname string, template *template.Template, service *service) error {
+	var buf bytes.Buffer
+	err := template.Execute(&buf, service)
 	if err != nil {
 		fmt.Printf("There was an error parsing the given file template.\n")
-		fmt.Printf("Error: %v\n", err)
-		os.Exit(1)
+		return err
 	}
-	goFmt = exec.Command("go", "fmt", fname)
-	err = goFmt.Run()
+	fileSet := token.NewFileSet()
+	f, err := parser.ParseFile(fileSet, "", buf.String(), parser.ParseComments)
 	if err != nil {
-		fmt.Printf("There was an error while running go fmt on generated file '%s'.\n", fname)
-		fmt.Printf("Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("There was an error parsing the given file.\n")
+		return err
 	}
+	file, err := os.Create(fname)
+	if err != nil {
+		fmt.Printf("There was an error creating the file: %s\n", fname)
+		return err
+	}
+	err = printer.Fprint(file, fileSet, f)
+	if err != nil {
+		fmt.Printf("There was an error while printing the generated file '%s'.\n", fname)
+		return err
+	}
+	return nil
 }
 
 type service struct {
-	Type       string
-	Param      string
-	Interfaces map[string]string
-	Crud       bool
-	Toggler    bool
+	Type     string
+	Param    string
+	Fields   map[string]string
+	Crud     bool
+	Toggler  bool
+	Scaffold bool
 }
 
-func mapInterfaces(data []string) map[string]string {
-	lastIndexFunc := func(c rune) bool {
-		return unicode.IsUpper(c)
+type field struct {
+	Type string
+	Name string
+}
+
+func typeToName(typ string) string {
+	var upcaseIndices []int
+	idx := strings.IndexFunc(typ, unicode.IsUpper)
+	for idx != -1 {
+		upcaseIndices = append(upcaseIndices, idx)
+		idx = strings.IndexFunc(typ[idx:], unicode.IsUpper)
 	}
+	return ""
+}
+
+func mapFields(data []string) map[string]string {
 	ifaceMap := make(map[string]string)
 	for _, iface := range data {
-		lastUpcase := strings.LastIndexFunc(iface, lastIndexFunc)
+		lastUpcase := strings.LastIndexFunc(iface, unicode.IsUpper)
 		r, size := utf8.DecodeRuneInString(iface[lastUpcase:])
 		rest := iface[lastUpcase:][size:]
 		ifaceMap[iface] = fmt.Sprintf("%c%s", unicode.ToLower(r), rest)
@@ -178,8 +195,8 @@ func isSpaceByte(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
 }
 
-var fileTemplateContent = `// DO NOT EDIT!
-// This file is generated by the api generator.
+var fileTemplateContent = `{{if not .Scaffold}}// DO NOT EDIT!
+// This file is generated by the api generator.{{end}}
 
 // +build !feature
 
@@ -190,12 +207,12 @@ import (
 )
 
 type {{.Type}}Service struct {
-	{{range $type, $param := .Interfaces}}
+	{{range $type, $param := .Fields}}
 	{{$param}} {{$type}} {{end}}
 }
 
-func New{{.Type}}Service({{range $type, $param := .Interfaces}}{{$param}} {{$type}}, {{end}}) *{{.Type}}Service {
-	service := {{.Type}}Service{ {{range $type, $param  := .Interfaces}}
+func New{{.Type}}Service({{range $type, $param := .Fields}}{{$param}} {{$type}}, {{end}}) *{{.Type}}Service {
+	service := {{.Type}}Service{ {{range $type, $param  := .Fields}}
 		{{$param}}: {{$param}},{{end}}
 	}
 	return &service
@@ -230,8 +247,8 @@ func (s *{{.Type}}Service) Delete({{.Param}} *{{.Type}}) error {
 }
 `
 
-var testFileContent = `// DO NOT EDIT!
-// This file is generated by the api generator.
+var testFileContent = `{{if not .Scaffold}}// DO NOT EDIT!
+// This file is generated by the api generator.{{end}}
 
 // +build !feature
 

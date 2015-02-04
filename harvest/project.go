@@ -24,7 +24,7 @@ func (date *ShortDate) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-//go:generate go run ../cmd/api_gen/api_gen.go -type=Project -c -t
+//go:generate go run ../cmd/api_gen/api_gen.go -type=Project -c -t -fields CrudEndpointProvider
 
 type Project struct {
 	Name     string `json:"name,omitempty"`
