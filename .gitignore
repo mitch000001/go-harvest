@@ -1,3 +1,4 @@
 .env
 harvest-doku/
 coverage.out
+cmd/doc-server
