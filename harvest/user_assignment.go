@@ -11,7 +11,7 @@ type UserAssignment struct {
 	// If true, user cannot log more hours toward the project -->
 	Deactivated bool `json:"deactivated"`
 	// Hourly rate of user on current project -->
-	HourlyRate int       `json:"hourly-rate"`
+	HourlyRate float64   `json:"hourly-rate"`
 	UpdatedAt  time.Time `json:"updated_at,omitempty"`
 	CreatedAt  time.Time `json:"created_at,omitempty"`
 }

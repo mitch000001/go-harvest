@@ -41,13 +41,22 @@ type Endpoint interface {
 	Path() string
 }
 
+type All interface {
+	All(interface{}, url.Values) error
+}
+
+type AllEndpoint interface {
+	All
+	Endpoint
+}
+
 type CrudEndpoint interface {
 	Crud
 	Endpoint
 }
 
 type Crud interface {
-	All(interface{}, url.Values) error
+	All
 	Find(interface{}, interface{}, url.Values) error
 	Create(CrudModel) error
 	Update(CrudModel) error
