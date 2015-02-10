@@ -16,6 +16,7 @@ import (
 
 var (
 	serviceType      string
+	payloadType      string
 	fields           []string
 	crudFlag         bool
 	togglerFlag      bool
@@ -33,6 +34,7 @@ func init() {
 	flag.BoolVar(&togglerFlag, "t", false, "-t")
 	flag.BoolVar(&scaffoldFlag, "s", false, "-s")
 	flag.StringVar(&serviceType, "type", "", `-type="Type"`)
+	flag.StringVar(&payloadType, "type", "", `-payload="PayloadType"`)
 	flag.Var((*stringsFlag)(&fields), "fields", "-fields 'field list'")
 }
 
@@ -106,12 +108,14 @@ func writeFile(fname string, template *template.Template, service *service) erro
 }
 
 type service struct {
-	Type     string
-	Param    string
-	Fields   map[string]string
-	Crud     bool
-	Toggler  bool
-	Scaffold bool
+	Type         string
+	Param        string
+	PayloadType  string
+	PayloadParam string
+	Fields       map[string]string
+	Crud         bool
+	Toggler      bool
+	Scaffold     bool
 }
 
 type field struct {
