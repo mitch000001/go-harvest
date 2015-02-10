@@ -1,12 +1,6 @@
 package harvest
 
-import (
-	"encoding/json"
-	"fmt"
-	"strconv"
-	"strings"
-	"time"
-)
+import "time"
 
 //go:generate go run ../cmd/api_gen/api_gen.go -type=Client -c -t
 
@@ -40,37 +34,6 @@ func (c *Client) SetId(id int) {
 func (c *Client) ToggleActive() bool {
 	c.Active = !c.Active
 	return c.Active
-}
-
-type Timeframe struct {
-	StartDate ShortDate
-	EndDate   ShortDate
-}
-
-func (tf Timeframe) MarshalJSON() ([]byte, error) {
-	if tf.StartDate.IsZero() || tf.EndDate.IsZero() {
-		return json.Marshal("")
-	}
-	return json.Marshal(fmt.Sprintf("%s,%s", tf.StartDate.Format("2006-01-02"), tf.EndDate.Format("2006-01-02")))
-}
-
-func (tf *Timeframe) UnmarshalJSON(data []byte) error {
-	unquotedData, _ := strconv.Unquote(string(data))
-	dates := strings.Split(unquotedData, ",")
-	if len(dates) != 2 {
-		*tf = Timeframe{}
-		return nil
-	}
-	startTime, err1 := time.Parse("2006-01-02", dates[0])
-	startDate := ShortDate{startTime}
-	endTime, err2 := time.Parse("2006-01-02", dates[1])
-	endDate := ShortDate{endTime}
-	if err1 != nil || err2 != nil {
-		*tf = Timeframe{}
-		return nil
-	}
-	*tf = Timeframe{StartDate: startDate, EndDate: endDate}
-	return nil
 }
 
 type ClientPayload struct {

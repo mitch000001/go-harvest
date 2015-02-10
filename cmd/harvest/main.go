@@ -30,8 +30,8 @@ func main() {
 		os.Exit(1)
 	}
 	timeframe := harvest.Timeframe{
-		StartDate: harvest.ShortDate{time.Date(2014, 01, 01, 0, 0, 0, 0, time.UTC)},
-		EndDate:   harvest.ShortDate{time.Date(2014, 02, 07, 0, 0, 0, 0, time.UTC)},
+		StartDate: harvest.Date(2014, 01, 01, time.UTC),
+		EndDate:   harvest.Date(2014, 02, 07, time.UTC),
 	}
 	params := url.Values{}
 	params.Add("from", timeframe.StartDate.Format("2006-01-02"))

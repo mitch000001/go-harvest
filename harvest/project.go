@@ -1,28 +1,6 @@
 package harvest
 
-import (
-	"encoding/json"
-	"strconv"
-	"time"
-)
-
-type ShortDate struct {
-	time.Time
-}
-
-func (date *ShortDate) MarshalJSON() ([]byte, error) {
-	if date.IsZero() {
-		return json.Marshal("")
-	}
-	return json.Marshal(date.Format("2006-01-02"))
-}
-
-func (date *ShortDate) UnmarshalJSON(data []byte) error {
-	unquotedData, _ := strconv.Unquote(string(data))
-	time, err := time.Parse("2006-01-02", unquotedData)
-	date.Time = time
-	return err
-}
+import "time"
 
 //go:generate go run ../cmd/api_gen/api_gen.go -type=Project -c -t -fields CrudEndpointProvider
 
