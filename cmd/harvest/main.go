@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"time"
 
 	"code.google.com/p/goauth2/oauth"
 	"github.com/mitch000001/go-harvest/harvest"
+	"github.com/mitch000001/go-harvest/harvest/auth"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	username := os.Getenv("HARVEST_USERNAME")
 	password := os.Getenv("HARVEST_PASSWORD")
 
-	client, err := NewBasicAuthClient(subdomain, &BasicAuthConfig{username, password})
+	client, err := NewBasicAuthClient(subdomain, &auth.BasicAuthConfig{username, password})
 	if err != nil {
 		fmt.Printf("There was an error creating the client:\n")
 		fmt.Printf("%T: %v\n", err, err)
@@ -52,9 +52,9 @@ func main() {
 }
 
 // NewBasicAuthClient creates a new Client with BasicAuth as authentication method
-func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*harvest.Harvest, error) {
-	clientProvider := &Transport{Config: config}
-	h, err := harvest.New(subdomain, BuildClientProvider(clientProvider.Client))
+func NewBasicAuthClient(subdomain string, config *auth.BasicAuthConfig) (*harvest.Harvest, error) {
+	clientProvider := auth.NewBasicAuthClientProvider(config)
+	h, err := harvest.New(subdomain, clientProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -63,29 +63,10 @@ func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*harvest.Har
 
 // NewOAuthClient creates a new Client with OAuth as authentication method
 func NewOAuthClient(subdomain string, config *oauth.Config) (*harvest.Harvest, error) {
-	clientProvider := &oauth.Transport{Config: config}
-	h, err := harvest.New(subdomain, BuildClientProvider(clientProvider.Client))
+	clientProvider := auth.NewOAuthClientProvider(config)
+	h, err := harvest.New(subdomain, clientProvider)
 	if err != nil {
 		return nil, err
 	}
 	return h, err
-}
-
-type clientProviderFunc func() *http.Client
-
-func (cf clientProviderFunc) Client() harvest.HttpClient {
-	return cf()
-}
-
-type clientProviderWrapper struct {
-	clientProviderFunc clientProviderFunc
-}
-
-func (cw *clientProviderWrapper) Client() harvest.HttpClient {
-	return cw.clientProviderFunc()
-}
-
-func BuildClientProvider(f clientProviderFunc) harvest.HttpClientProvider {
-	wrapper := &clientProviderWrapper{clientProviderFunc: f}
-	return wrapper
 }
