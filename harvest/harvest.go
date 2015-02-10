@@ -42,7 +42,6 @@ func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, 
 		return nil, err
 	}
 	logger := log.New(os.Stdout, "harvest: ", log.Ldate|log.Ltime|log.Lshortfile)
-	logger.Printf("Base URL: %s\n", baseUrl)
 	api := &JsonApi{
 		Client:  clientProvider.Client,
 		baseUrl: baseUrl,
@@ -51,6 +50,7 @@ func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, 
 	h := &Harvest{
 		baseUrl: baseUrl,
 		api:     api,
+		Logger:  logger,
 	}
 	h.Users = NewUserService(api.CrudTogglerEndpoint("people"))
 	projectApi := api.CrudTogglerEndpoint("projects")
@@ -65,6 +65,7 @@ func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, 
 type Harvest struct {
 	api      *JsonApi
 	baseUrl  *url.URL // API endpoint base URL
+	Logger   *log.Logger
 	Users    *UserService
 	Projects *ProjectService
 	Clients  *ClientService

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"sort"
 	"testing"
 )
 
@@ -25,9 +24,9 @@ func TestNewJsonApiPayload(t *testing.T) {
 		t.Fail()
 	}
 
-	sort.Sort(sortedBytes(marshaledValue))
-	sort.Sort(sortedBytes(payload.marshaledValue))
-	if !bytes.Equal(marshaledValue, payload.marshaledValue) {
+	sortedMarshaledValue := sortBytes(marshaledValue)
+	sortedPayloadMarshaledValue := sortBytes(payload.marshaledValue)
+	if !bytes.Equal(sortedMarshaledValue, sortedPayloadMarshaledValue) {
 		t.Logf("Expected marshaledValue to equal '%q', got '%q'\n", string(marshaledValue), string(payload.marshaledValue))
 		t.Fail()
 	}
@@ -66,9 +65,9 @@ func TestJsonApiPayloadMarshaledValue(t *testing.T) {
 
 	actualMarshaledValue := payload.MarshaledValue()
 
-	sort.Sort(sortedBytes(marshaledValue))
-	sort.Sort(sortedBytes(*actualMarshaledValue))
-	if !bytes.Equal(marshaledValue, *actualMarshaledValue) {
+	sortedMarshaledValue := sortBytes(marshaledValue)
+	sortedActualMarshaledValue := sortBytes(payload.marshaledValue)
+	if !bytes.Equal(sortedMarshaledValue, sortedActualMarshaledValue) {
 		t.Logf("Expected marshaledValue to equal '%q', got '%q'\n", string(marshaledValue), string(*actualMarshaledValue))
 		t.Fail()
 	}
@@ -96,7 +95,7 @@ func TestJsonApiPayloadValue(t *testing.T) {
 
 func TestJsonApiPayloadMarshalJSON(t *testing.T) {
 	testData := testPayload{
-		ID:   12,
+		ID:   123566212,
 		Data: "foobar",
 	}
 	testJson, err := json.Marshal(&testData)
@@ -116,7 +115,7 @@ func TestJsonApiPayloadMarshalJSON(t *testing.T) {
 		t.Logf("Expected no error, got: %v", err)
 	}
 
-	expected := `{"Test":{"ID":12,"Data":"foobar"}}`
+	expected := `{"Test":{"ID":123566212,"Data":"foobar"}}`
 
 	if string(marshaled) != expected {
 		t.Fail()
@@ -126,7 +125,7 @@ func TestJsonApiPayloadMarshalJSON(t *testing.T) {
 }
 
 func TestJsonApiPayloadUnmarshalJSON(t *testing.T) {
-	testJson := `{"Test":{"ID":12,"Data":"foobar"}}`
+	testJson := `{"Test":{"ID":123566212,"Data":"foobar"}}`
 	var payload JsonApiPayload
 
 	err := json.Unmarshal([]byte(testJson), &payload)
@@ -144,11 +143,10 @@ func TestJsonApiPayloadUnmarshalJSON(t *testing.T) {
 		t.Logf("Expected unmarshaled JSON to equal '%s', got '%s'", expected, actual)
 	}
 
-	expectedValue := []byte(`{"ID":12,"Data":"foobar"}`)
-	sort.Sort(sortedBytes(expectedValue))
-	sort.Sort(sortedBytes(payload.marshaledValue))
-
-	if !bytes.Equal(expectedValue, payload.marshaledValue) {
+	expectedValue := []byte(`{"ID":123566212,"Data":"foobar"}`)
+	sortedMarshaledValue := sortBytes(expectedValue)
+	sortedPayloadMarshaledValue := sortBytes(payload.marshaledValue)
+	if !bytes.Equal(sortedMarshaledValue, sortedPayloadMarshaledValue) {
 		t.Logf("Expected value to equal '%s', got '%s'", string(expectedValue), string(payload.marshaledValue))
 		t.Fail()
 	}

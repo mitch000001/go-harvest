@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -168,6 +169,13 @@ func (c *compareToWrapper) String() string {
 
 func compare(data interface{}, compareFn func(interface{}, interface{}) bool) compareTo {
 	return &compareToWrapper{data: data, compareFn: compareFn}
+}
+
+func sortBytes(data []byte) []byte {
+	output := make([]byte, len(data))
+	copy(output, data)
+	sort.Sort(sortedBytes(output))
+	return output
 }
 
 type sortedBytes []byte

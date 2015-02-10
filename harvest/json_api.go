@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 )
 
@@ -89,7 +88,7 @@ func (a *JsonApi) CrudTogglerEndpoint(path string) CrudTogglerEndpoint {
 
 func (a *JsonApi) logf(format string, arg ...interface{}) {
 	if a.Logger == nil {
-		a.Logger = log.New(os.Stdout, "harvest: ", log.Ldate|log.Ltime|log.Lshortfile)
+		return
 	}
 	a.Logger.Printf(format, arg)
 }
