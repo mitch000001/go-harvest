@@ -36,7 +36,7 @@ func parseSubdomain(subdomain string) (*url.URL, error) {
 //
 // It returns an error if the subdomain does not satisfy the above mentioned specification
 // or if the URL parsed from the subdomain string is not valid.
-func NewHarvest(subdomain string, clientProvider HttpClientProvider) (*Harvest, error) {
+func New(subdomain string, clientProvider HttpClientProvider) (*Harvest, error) {
 	baseUrl, err := parseSubdomain(subdomain)
 	if err != nil {
 		return nil, err

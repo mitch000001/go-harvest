@@ -54,7 +54,7 @@ func main() {
 // NewBasicAuthClient creates a new Client with BasicAuth as authentication method
 func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*harvest.Harvest, error) {
 	clientProvider := &Transport{Config: config}
-	h, err := harvest.NewHarvest(subdomain, BuildClientProvider(clientProvider.Client))
+	h, err := harvest.New(subdomain, BuildClientProvider(clientProvider.Client))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func NewBasicAuthClient(subdomain string, config *BasicAuthConfig) (*harvest.Har
 // NewOAuthClient creates a new Client with OAuth as authentication method
 func NewOAuthClient(subdomain string, config *oauth.Config) (*harvest.Harvest, error) {
 	clientProvider := &oauth.Transport{Config: config}
-	h, err := harvest.NewHarvest(subdomain, BuildClientProvider(clientProvider.Client))
+	h, err := harvest.New(subdomain, BuildClientProvider(clientProvider.Client))
 	if err != nil {
 		return nil, err
 	}
