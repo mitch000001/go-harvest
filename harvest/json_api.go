@@ -45,21 +45,25 @@ func (a *JsonApiPayload) MarshalJSON() ([]byte, error) {
 }
 
 func (a *JsonApiPayload) UnmarshalJSON(data []byte) error {
+	// check for syntax
 	var f interface{}
 	err := json.Unmarshal(data, &f)
 	if err != nil {
 		return err
 	}
-	m := f.(map[string]interface{})
-	for k := range m {
-		a.name = k
-	}
-	val := m[a.name]
-	raw, err := json.Marshal(val)
+	// TODO: proper scanning and parsing from json!
+	buffer := bytes.NewBuffer(data)
+	buffer.ReadBytes(byte('{')) // beginning of JSON
+	buffer.ReadBytes(byte('"')) // name left quote
+	nameWithQuote, _ := buffer.ReadBytes(byte('"'))
+	name := nameWithQuote[:len(nameWithQuote)-1]
+	buffer.ReadBytes(byte(':')) // name right quote and colon
+	innerJson, err := buffer.ReadBytes(byte('}'))
 	if err != nil {
-		return err
+		return fmt.Errorf("No inner JSON!")
 	}
-	a.marshaledValue = raw
+	a.name = string(name)
+	a.marshaledValue = innerJson
 	return nil
 }
 

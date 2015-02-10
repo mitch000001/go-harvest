@@ -43,6 +43,10 @@ func main() {
 		if err != nil {
 			fmt.Printf("There was an error fetching all day entries from project with id %d:\n", project.Id())
 			fmt.Printf("%T: %v\n", err, err)
+		} else {
+			for _, d := range dayEntries {
+				fmt.Printf("DayEntry: %+#v\n", d)
+			}
 		}
 	}
 }
