@@ -30,14 +30,6 @@ func (t *testPayload) SetId(id int) {
 	t.ID = id
 }
 
-type testHttpClientProvider struct {
-	testClient *testHttpClient
-}
-
-func (cp *testHttpClientProvider) Client() HttpClient {
-	return cp.testClient
-}
-
 type testHttpClient struct {
 	testRequest  *http.Request
 	testResponse *http.Response
