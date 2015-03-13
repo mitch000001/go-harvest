@@ -34,6 +34,10 @@ func (date *ShortDate) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+func (date *ShortDate) String() string {
+	return date.Format("2006-01-02")
+}
+
 type Timeframe struct {
 	StartDate ShortDate
 	EndDate   ShortDate
@@ -46,7 +50,7 @@ func From(date ShortDate) Timeframe {
 	return Timeframe{date, endDate}
 }
 
-func (tf Timeframe) MarshalJSON() ([]byte, error) {
+func (tf *Timeframe) MarshalJSON() ([]byte, error) {
 	if tf.StartDate.IsZero() || tf.EndDate.IsZero() {
 		return json.Marshal("")
 	}
@@ -70,4 +74,9 @@ func (tf *Timeframe) UnmarshalJSON(data []byte) error {
 	}
 	*tf = Timeframe{StartDate: startDate, EndDate: endDate}
 	return nil
+}
+
+func (tf *Timeframe) String() string {
+	fmt.Printf("String mehtod hit!")
+	return fmt.Sprintf("{%s-%s}", tf.StartDate, tf.EndDate)
 }
