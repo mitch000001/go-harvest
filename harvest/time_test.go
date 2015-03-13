@@ -125,7 +125,7 @@ func TestFrom(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		actualEndDate := From(test.startDate).EndDate
+		actualEndDate := TimeframeFromDate(test.startDate).EndDate
 		if !reflect.DeepEqual(test.expectedEndDate, actualEndDate) {
 			t.Logf("Expected EndDate to equal '%s', got '%s'\n", test.expectedEndDate, actualEndDate)
 			t.Fail()

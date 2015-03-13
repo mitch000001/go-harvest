@@ -17,8 +17,9 @@ func TestTransportClient(t *testing.T) {
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(transport, client.Transport) {
+	if !reflect.DeepEqual(&transport, client.Transport) {
 		t.Logf("Expected client transport to equal '%+#v', got '%+#v'", transport, client.Transport)
+		t.Fail()
 	}
 }
 

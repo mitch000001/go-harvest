@@ -3,6 +3,7 @@ package harvest
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -43,11 +44,27 @@ type Timeframe struct {
 	EndDate   ShortDate
 }
 
-// From returns a Timeframe with the StartDate set to date and the EndDate set to today.
+// TimeframeFromDate returns a Timeframe with the StartDate set to date and the EndDate set to today.
 // The EndDate will use the same timezone location as provided in StartDate
-func From(date ShortDate) Timeframe {
+func TimeframeFromDate(date ShortDate) Timeframe {
 	endDate := NewShortDate(time.Now().In(date.Location()))
 	return Timeframe{date, endDate}
+}
+
+func TimeframeFromQuery(params url.Values) (Timeframe, error) {
+	from := params.Get("from")
+	to := params.Get("to")
+	if from == "" || to == "" {
+		return Timeframe{}, fmt.Errorf("'from' and/or 'to' must be set")
+	}
+	startTime, err1 := time.Parse("2006-01-02", from)
+	startDate := ShortDate{startTime}
+	endTime, err2 := time.Parse("2006-01-02", to)
+	endDate := ShortDate{endTime}
+	if err1 != nil || err2 != nil {
+		return Timeframe{}, fmt.Errorf("Malformed query params")
+	}
+	return Timeframe{StartDate: startDate, EndDate: endDate}, nil
 }
 
 func (tf *Timeframe) MarshalJSON() ([]byte, error) {
@@ -74,6 +91,10 @@ func (tf *Timeframe) UnmarshalJSON(data []byte) error {
 	}
 	*tf = Timeframe{StartDate: startDate, EndDate: endDate}
 	return nil
+}
+
+func (tf *Timeframe) IsZero() bool {
+	return tf.StartDate.IsZero() && tf.EndDate.IsZero()
 }
 
 func (tf *Timeframe) String() string {

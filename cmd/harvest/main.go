@@ -34,13 +34,12 @@ func main() {
 		StartDate: harvest.Date(2014, 01, 01, time.UTC),
 		EndDate:   harvest.Date(2014, 02, 07, time.UTC),
 	}
-	params := url.Values{}
-	params.Add("from", timeframe.StartDate.Format("2006-01-02"))
-	params.Add("to", timeframe.EndDate.Format("2006-01-02"))
+	params := harvest.Params{}
+	params.ForTimeframe(timeframe)
 	for _, project := range projects {
 		fmt.Printf("Project: %+#v\n", project)
 		var dayEntries []*harvest.DayEntry
-		err := client.Projects.DayEntries(project).All(&dayEntries, params)
+		err := client.Projects.DayEntries(project).All(&dayEntries, url.Values(params))
 		if err != nil {
 			fmt.Printf("There was an error fetching all day entries from project with id %d:\n", project.Id())
 			fmt.Printf("%T: %v\n", err, err)

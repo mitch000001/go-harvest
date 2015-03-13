@@ -34,7 +34,6 @@ type Transport struct {
 	// It will default to http.DefaultTransport if nil.
 	// (It should never be an oauth.Transport.)
 	Transport http.RoundTripper
-	client    *http.Client
 }
 
 // Client returns an *http.Client that makes OAuth-authenticated requests.
