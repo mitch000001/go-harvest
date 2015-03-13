@@ -47,9 +47,8 @@ func testSubdomain(subdomain string, t *testing.T) {
 }
 
 func TestNewHarvest(t *testing.T) {
-	testClient := &testHttpClient{}
-	testClientProvider := &testHttpClientProvider{testClient}
-	client, err := New("foo", testClientProvider)
+	testClientFn := func() HttpClient { return &testHttpClient{} }
+	client, err := New("foo", testClientFn)
 
 	if err != nil {
 		t.Logf("Expected no error, got %v\n", err)
@@ -82,7 +81,7 @@ func TestNewHarvest(t *testing.T) {
 	}
 
 	// wrong kind of subdomain
-	client, err = New("", testClientProvider)
+	client, err = New("", testClientFn)
 
 	if err == nil {
 		t.Logf("Expected error\n")

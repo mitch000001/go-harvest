@@ -36,14 +36,14 @@ func parseSubdomain(subdomain string) (*url.URL, error) {
 //
 // It returns an error if the subdomain does not satisfy the above mentioned specification
 // or if the URL parsed from the subdomain string is not valid.
-func New(subdomain string, clientProvider HttpClientProvider) (*Harvest, error) {
+func New(subdomain string, clientProvider func() HttpClient) (*Harvest, error) {
 	baseUrl, err := parseSubdomain(subdomain)
 	if err != nil {
 		return nil, err
 	}
 	logger := log.New(os.Stdout, "harvest: ", log.Ldate|log.Ltime|log.Lshortfile)
 	api := &JsonApi{
-		Client:  clientProvider.Client,
+		Client:  clientProvider,
 		baseUrl: baseUrl,
 		Logger:  logger,
 	}
@@ -52,7 +52,8 @@ func New(subdomain string, clientProvider HttpClientProvider) (*Harvest, error) 
 		api:     api,
 		Logger:  logger,
 	}
-	h.Users = NewUserService(api.CrudTogglerEndpoint("people"))
+	userApi := api.CrudTogglerEndpoint("people")
+	h.Users = NewUserService(api, userApi)
 	projectApi := api.CrudTogglerEndpoint("projects")
 	h.Projects = NewProjectService(api, projectApi)
 	h.Clients = NewClientService(api.CrudTogglerEndpoint("clients"))

@@ -1,8 +1,11 @@
 package harvest
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
-//go:generate go run ../cmd/api_gen/api_gen.go -type=User -c -t
+//go:generate go run ../cmd/api_gen/api_gen.go -type=User -c -t -fields CrudEndpointProvider
 
 type User struct {
 	ID                           int       `json:"id,omitempty"`
@@ -41,4 +44,12 @@ func (u *User) ToggleActive() bool {
 type UserPayload struct {
 	ErrorPayload
 	User *User `json:"user,omitempty"`
+}
+
+func (u *UserService) DayEntries(user *User) *DayEntryService {
+	id := user.Id()
+	userPath := u.endpoint.Path()
+	path := fmt.Sprintf("%s/%d/entries", userPath, id)
+	endpoint := u.provider.CrudEndpoint(path)
+	return NewDayEntryService(endpoint)
 }

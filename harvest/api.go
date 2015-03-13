@@ -21,6 +21,12 @@ type HttpClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
+type ClientProviderFunc func() *http.Client
+
+func (cf ClientProviderFunc) Client() HttpClient {
+	return cf()
+}
+
 type RequestProcessor interface {
 	Process(method string, path string, body io.Reader) (*http.Response, error)
 }

@@ -34,7 +34,7 @@ func init() {
 	flag.BoolVar(&togglerFlag, "t", false, "-t")
 	flag.BoolVar(&scaffoldFlag, "s", false, "-s")
 	flag.StringVar(&serviceType, "type", "", `-type="Type"`)
-	flag.StringVar(&payloadType, "type", "", `-payload="PayloadType"`)
+	flag.StringVar(&payloadType, "payload", "", `-payload="PayloadType"`)
 	flag.Var((*stringsFlag)(&fields), "fields", "-fields 'field list'")
 }
 

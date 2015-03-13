@@ -17,7 +17,7 @@ func main() {
 
 	clientProvider := auth.NewBasicAuthClientProvider(&auth.BasicAuthConfig{username, password})
 
-	client, err := harvest.New(subdomain, clientProvider)
+	client, err := harvest.New(subdomain, clientProvider.Client)
 	if err != nil {
 		fmt.Printf("There was an error creating the client:\n")
 		fmt.Printf("%T: %v\n", err, err)

@@ -10,12 +10,14 @@ import (
 )
 
 type UserService struct {
-	endpoint CrudTogglerEndpoint
+	provider	CrudEndpointProvider
+	endpoint	CrudTogglerEndpoint
 }
 
-func NewUserService(endpoint CrudTogglerEndpoint) *UserService {
+func NewUserService(provider CrudEndpointProvider, endpoint CrudTogglerEndpoint) *UserService {
 	service := UserService{
-		endpoint: endpoint,
+		provider:	provider,
+		endpoint:	endpoint,
 	}
 	return &service
 }
