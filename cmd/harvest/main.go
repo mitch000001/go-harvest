@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"code.google.com/p/goauth2/oauth"
 	"github.com/mitch000001/go-harvest/harvest"
 	"github.com/mitch000001/go-harvest/harvest/auth"
 )
@@ -16,7 +15,9 @@ func main() {
 	username := os.Getenv("HARVEST_USERNAME")
 	password := os.Getenv("HARVEST_PASSWORD")
 
-	client, err := NewBasicAuthClient(subdomain, &auth.BasicAuthConfig{username, password})
+	clientProvider := auth.NewBasicAuthClientProvider(&auth.BasicAuthConfig{username, password})
+
+	client, err := harvest.New(subdomain, clientProvider)
 	if err != nil {
 		fmt.Printf("There was an error creating the client:\n")
 		fmt.Printf("%T: %v\n", err, err)
@@ -49,24 +50,4 @@ func main() {
 			}
 		}
 	}
-}
-
-// NewBasicAuthClient creates a new Client with BasicAuth as authentication method
-func NewBasicAuthClient(subdomain string, config *auth.BasicAuthConfig) (*harvest.Harvest, error) {
-	clientProvider := auth.NewBasicAuthClientProvider(config)
-	h, err := harvest.New(subdomain, clientProvider)
-	if err != nil {
-		return nil, err
-	}
-	return h, nil
-}
-
-// NewOAuthClient creates a new Client with OAuth as authentication method
-func NewOAuthClient(subdomain string, config *oauth.Config) (*harvest.Harvest, error) {
-	clientProvider := auth.NewOAuthClientProvider(config)
-	h, err := harvest.New(subdomain, clientProvider)
-	if err != nil {
-		return nil, err
-	}
-	return h, err
 }
