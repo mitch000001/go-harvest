@@ -115,7 +115,7 @@ func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Res
 	}
 	request, err := http.NewRequest(method, requestUrl.String(), body)
 	if err != nil {
-		a.logf("Error creating new request: %s\n")
+		a.logf("Error creating new request: %s\n", requestUrl.String())
 		a.logf("%T: %v\n", err, err)
 		return nil, err
 	}
