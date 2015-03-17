@@ -127,7 +127,11 @@ func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Res
 	}
 	// TODO: adapt tests to always get a response if err is nil
 	if ct := response.Header.Get("Content-Type"); ct != "application/json; charset=utf-8" {
-		return nil, fmt.Errorf("Bad Request: \nResponse has wrong Content-Type '%q'\nRequest: %+#v\nRequest URL: %s\n", ct, request, request.URL)
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			body = []byte("NO BODY")
+		}
+		return nil, fmt.Errorf("Bad Request: \nResponse has wrong Content-Type '%q'\nRequest: %+#v\nRequest URL: %s\nResponse: %+#v\nBody: %s\n", ct, request, request.URL, response, string(body))
 	}
 	return response, nil
 }
