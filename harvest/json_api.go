@@ -94,7 +94,7 @@ func (a *JsonApi) logf(format string, arg ...interface{}) {
 	if a.Logger == nil {
 		return
 	}
-	a.Logger.Printf(format, arg)
+	a.Logger.Printf(format, arg...)
 }
 
 func (a *JsonApi) forPath(path string) *JsonApi {
