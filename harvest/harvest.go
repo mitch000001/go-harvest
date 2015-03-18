@@ -5,9 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/url"
-	"os"
 	"strings"
 )
 
@@ -41,16 +39,13 @@ func New(subdomain string, clientProvider func() HttpClient) (*Harvest, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger := log.New(os.Stdout, "harvest: ", log.Ldate|log.Ltime|log.Lshortfile)
 	api := &JsonApi{
 		Client:  clientProvider,
 		baseUrl: baseUrl,
-		Logger:  logger,
 	}
 	h := &Harvest{
 		baseUrl: baseUrl,
 		api:     api,
-		Logger:  logger,
 	}
 	userApi := api.CrudTogglerEndpoint("people")
 	h.Users = NewUserService(api, userApi)
@@ -66,7 +61,6 @@ func New(subdomain string, clientProvider func() HttpClient) (*Harvest, error) {
 type Harvest struct {
 	api      *JsonApi
 	baseUrl  *url.URL // API endpoint base URL
-	Logger   *log.Logger
 	Users    *UserService
 	Projects *ProjectService
 	Clients  *ClientService

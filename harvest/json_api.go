@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -71,7 +70,6 @@ type JsonApi struct {
 	baseUrl *url.URL          // API base URL
 	path    string            // API endpoint path
 	Client  func() HttpClient // HTTP Client to do the requests
-	Logger  *log.Logger
 }
 
 func (a *JsonApi) Path() string {
@@ -90,33 +88,25 @@ func (a *JsonApi) CrudTogglerEndpoint(path string) CrudTogglerEndpoint {
 	return a.forPath(path)
 }
 
-func (a *JsonApi) logf(format string, arg ...interface{}) {
-	if a.Logger == nil {
-		return
-	}
-	a.Logger.Printf(format, arg...)
-}
-
 func (a *JsonApi) forPath(path string) *JsonApi {
 	return &JsonApi{
 		baseUrl: a.baseUrl,
 		path:    path,
 		Client:  a.Client,
-		Logger:  a.Logger,
 	}
 }
 
 func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Response, error) {
 	requestUrl, err := a.baseUrl.Parse(path)
 	if err != nil {
-		a.logf("Error parsing path: %s\n", path)
-		a.logf("%T: %v\n", err, err)
+		info.Printf("Error parsing path: %s\n", path)
+		info.Printf("%T: %v\n", err, err)
 		return nil, err
 	}
 	request, err := http.NewRequest(method, requestUrl.String(), body)
 	if err != nil {
-		a.logf("Error creating new request: %s\n", requestUrl.String())
-		a.logf("%T: %v\n", err, err)
+		info.Printf("Error creating new request: %s\n", requestUrl.String())
+		info.Printf("%T: %v\n", err, err)
 		return nil, err
 	}
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
@@ -149,20 +139,25 @@ func (a *JsonApi) All(data interface{}, params url.Values) error {
 	}
 	response, err := a.Process("GET", completePath, nil)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	defer response.Body.Close()
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	var payload []*JsonApiPayload
 	err = json.Unmarshal(responseBytes, &payload)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
-		a.logf("Response: %s\n", string(responseBytes))
+		info.Printf("%T: %v\n", err, err)
+		debug.Printf("Response: %+#v\n", response)
+		if response.Request != nil {
+			debug.Printf("Request: %+#v\n", response.Request)
+			debug.Printf("Request URL: %s\n", response.Request.URL.String())
+		}
+		debug.Printf("Response Body: %s\n", string(responseBytes))
 		return err
 	}
 	var rawPayloads []*json.RawMessage
@@ -171,12 +166,12 @@ func (a *JsonApi) All(data interface{}, params url.Values) error {
 	}
 	marshaled, err := json.Marshal(&rawPayloads)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	err = json.Unmarshal(marshaled, &data)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	return nil
@@ -201,33 +196,33 @@ func (a *JsonApi) Find(id interface{}, data interface{}, params url.Values) erro
 	}
 	response, err := a.Process("GET", completePath, nil)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	if response.StatusCode == 404 {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return notFound("")
 	}
 	defer response.Body.Close()
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	var payload JsonApiPayload
 	err = json.Unmarshal(responseBytes, &payload)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	marshaled, err := json.Marshal(payload.MarshaledValue())
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	err = json.Unmarshal(marshaled, data)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	return nil
@@ -237,7 +232,7 @@ func (a *JsonApi) Find(id interface{}, data interface{}, params url.Values) erro
 func (a *JsonApi) Create(data CrudModel) error {
 	marshaledData, err := json.Marshal(&data)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	requestPayload := &JsonApiPayload{
@@ -246,13 +241,13 @@ func (a *JsonApi) Create(data CrudModel) error {
 	}
 	marshaledPayload, err := json.Marshal(&requestPayload)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 
 	response, err := a.Process("POST", a.path, bytes.NewReader(marshaledPayload))
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	defer response.Body.Close()
@@ -269,17 +264,17 @@ func (a *JsonApi) Create(data CrudModel) error {
 	} else {
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			a.logf("%T: %v\n", err, err)
+			info.Printf("%T: %v\n", err, err)
 			return err
 		}
 		apiResponse := ErrorPayload{}
 		err = json.Unmarshal(responseBytes, &apiResponse)
 		if err != nil {
-			a.logf("%T: %v\n", err, err)
+			info.Printf("%T: %v\n", err, err)
 			return err
 		}
 		err = &ResponseError{&apiResponse}
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 }
@@ -291,7 +286,7 @@ func (a *JsonApi) Update(data CrudModel) error {
 	updateTemplate := fmt.Sprintf("%s/%%d", a.path)
 	marshaledData, err := json.Marshal(&data)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	requestPayload := &JsonApiPayload{
@@ -300,29 +295,29 @@ func (a *JsonApi) Update(data CrudModel) error {
 	}
 	marshaledPayload, err := json.Marshal(&requestPayload)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	response, err := a.Process("PUT", fmt.Sprintf(updateTemplate, id), bytes.NewReader(marshaledPayload))
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			a.logf("%T: %v\n", err, err)
+			info.Printf("%T: %v\n", err, err)
 			return err
 		}
 		apiResponse := ErrorPayload{}
 		err = json.Unmarshal(responseBytes, &apiResponse)
 		if err != nil {
-			a.logf("%T: %v\n", err, err)
+			info.Printf("%T: %v\n", err, err)
 			return err
 		}
 		err = &ResponseError{&apiResponse}
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	return nil
@@ -335,7 +330,7 @@ func (a *JsonApi) Delete(data CrudModel) error {
 	deleteTemplate := fmt.Sprintf("%s/%%d", a.path)
 	marshaledData, err := json.Marshal(&data)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	requestPayload := &JsonApiPayload{
@@ -344,30 +339,30 @@ func (a *JsonApi) Delete(data CrudModel) error {
 	}
 	marshaledPayload, err := json.Marshal(&requestPayload)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 
 	response, err := a.Process("DELETE", fmt.Sprintf(deleteTemplate, id), bytes.NewReader(marshaledPayload))
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			a.logf("%T: %v\n", err, err)
+			info.Printf("%T: %v\n", err, err)
 			return err
 		}
 		apiResponse := ErrorPayload{}
 		err = json.Unmarshal(responseBytes, &apiResponse)
 		if err != nil {
-			a.logf("%T: %v\n", err, err)
+			info.Printf("%T: %v\n", err, err)
 			return err
 		}
 		err = &ResponseError{&apiResponse}
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	return nil
@@ -379,7 +374,7 @@ func (a *JsonApi) Toggle(data ActiveTogglerCrudModel) error {
 	toggleTemplate := fmt.Sprintf("%s/%%d", a.path)
 	marshaledData, err := json.Marshal(&data)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	requestPayload := &JsonApiPayload{
@@ -388,13 +383,13 @@ func (a *JsonApi) Toggle(data ActiveTogglerCrudModel) error {
 	}
 	marshaledPayload, err := json.Marshal(&requestPayload)
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 
 	response, err := a.Process("POST", fmt.Sprintf(toggleTemplate, id), bytes.NewReader(marshaledPayload))
 	if err != nil {
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	}
 	defer response.Body.Close()
@@ -403,17 +398,17 @@ func (a *JsonApi) Toggle(data ActiveTogglerCrudModel) error {
 	} else if response.StatusCode == http.StatusBadRequest {
 		responseBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			a.logf("%T: %v\n", err, err)
+			info.Printf("%T: %v\n", err, err)
 			return err
 		}
 		apiResponse := ErrorPayload{}
 		err = json.Unmarshal(responseBytes, &apiResponse)
 		if err != nil {
-			a.logf("%T: %v\n", err, err)
+			info.Printf("%T: %v\n", err, err)
 			return err
 		}
 		err = &ResponseError{&apiResponse}
-		a.logf("%T: %v\n", err, err)
+		info.Printf("%T: %v\n", err, err)
 		return err
 	} else {
 		panic(fmt.Sprintf("Unknown StatusCode: %d", response.StatusCode))
