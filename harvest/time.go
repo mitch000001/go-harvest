@@ -57,9 +57,9 @@ func TimeframeFromQuery(params url.Values) (Timeframe, error) {
 	if from == "" || to == "" {
 		return Timeframe{}, fmt.Errorf("'from' and/or 'to' must be set")
 	}
-	startTime, err1 := time.Parse("2006-01-02", from)
+	startTime, err1 := time.Parse("20060102", from)
 	startDate := ShortDate{startTime}
-	endTime, err2 := time.Parse("2006-01-02", to)
+	endTime, err2 := time.Parse("20060102", to)
 	endDate := ShortDate{endTime}
 	if err1 != nil || err2 != nil {
 		return Timeframe{}, fmt.Errorf("Malformed query params")
@@ -98,6 +98,5 @@ func (tf *Timeframe) IsZero() bool {
 }
 
 func (tf *Timeframe) String() string {
-	fmt.Printf("String mehtod hit!")
 	return fmt.Sprintf("{%s-%s}", tf.StartDate, tf.EndDate)
 }
