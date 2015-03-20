@@ -116,7 +116,7 @@ func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Res
 		return nil, err
 	}
 	// TODO: adapt tests to always get a response if err is nil
-	if ct := response.Header.Get("Content-Type"); ct != "application/json; charset=utf-8" {
+	if ct := response.Header.Get("Content-Type"); !strings.Contains(ct, "application/json") {
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			body = []byte("NO BODY")

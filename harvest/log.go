@@ -32,8 +32,8 @@ func Debug(fn func()) {
 	debugMode = false
 }
 
-var debug *log.Logger = newConditionalLogger(os.Stdout, "harvest", debugFlags, &debugMode)
-var info *log.Logger = newConditionalLogger(os.Stdout, "harvest", log.LstdFlags, &infoMode)
+var debug *log.Logger = newConditionalLogger(os.Stdout, "harvest: ", debugFlags, &debugMode)
+var info *log.Logger = newConditionalLogger(os.Stdout, "harvest: ", log.LstdFlags, &infoMode)
 
 func newConditionalLogger(w io.Writer, prefix string, flag int, condition *bool) *log.Logger {
 	condWriter := newConditionalWriter(w, condition)
