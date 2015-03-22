@@ -53,3 +53,11 @@ func (u *UserService) DayEntries(user *User) *DayEntryService {
 	endpoint := u.provider.CrudEndpoint(path)
 	return NewDayEntryService(endpoint)
 }
+
+func (u *UserService) Expenses(user *User) *ExpenseService {
+	id := user.Id()
+	userPath := u.endpoint.Path()
+	path := fmt.Sprintf("%s/%d/expenses", userPath, id)
+	endpoint := u.provider.CrudEndpoint(path)
+	return NewExpenseService(endpoint)
+}

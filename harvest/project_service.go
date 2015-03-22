@@ -17,3 +17,11 @@ func (p *ProjectService) DayEntries(project *Project) *DayEntryService {
 	endpoint := p.provider.CrudEndpoint(path)
 	return NewDayEntryService(endpoint)
 }
+
+func (p *ProjectService) Expenses(project *Project) *ExpenseService {
+	id := project.Id()
+	projectPath := p.endpoint.Path()
+	path := fmt.Sprintf("%s/%d/expenses", projectPath, id)
+	endpoint := p.provider.CrudEndpoint(path)
+	return NewExpenseService(endpoint)
+}
