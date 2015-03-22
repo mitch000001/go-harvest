@@ -123,6 +123,16 @@ func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Res
 		}
 		return nil, fmt.Errorf("Bad Request: \nResponse has wrong Content-Type '%q'\nRequest: %+#v\nRequest URL: %s\nResponse: %+#v\nBody: %s\n", ct, request, request.URL, response, string(body))
 	}
+	if response.StatusCode == http.StatusNotFound {
+		response.Body.Close()
+		reason := response.Header.Get("X-404-Reason")
+		return nil, notFound(reason)
+	}
+	if response.StatusCode == http.StatusServiceUnavailable {
+		response.Body.Close()
+		retryAfter := response.Header.Get("Retry-After")
+		return nil, rateLimitReached(retryAfter)
+	}
 	return response, nil
 }
 
@@ -198,10 +208,6 @@ func (a *JsonApi) Find(id interface{}, data interface{}, params url.Values) erro
 	if err != nil {
 		info.Printf("%T: %v\n", err, err)
 		return err
-	}
-	if response.StatusCode == 404 {
-		info.Printf("%T: %v\n", err, err)
-		return notFound("")
 	}
 	defer response.Body.Close()
 	responseBytes, err := ioutil.ReadAll(response.Body)

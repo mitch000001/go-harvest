@@ -77,13 +77,40 @@ func (h *Harvest) Account() (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Account json: '%s'\n", string(responseBytes))
 	account := Account{}
 	err = json.Unmarshal(responseBytes, &account)
 	if err != nil {
 		return nil, err
 	}
 	return &account, nil
+}
+
+func (h *Harvest) RateLimitStatus() (interface{}, error) {
+	response, err := h.api.Process("GET", "account/rate_limit_status", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+	responseBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	var limit RateLimit
+	err = json.Unmarshal(responseBytes, &limit)
+	if err != nil {
+		return nil, err
+	}
+	return limit, nil
+}
+
+type RateLimit struct {
+	// TimeframeLimit specifies the timframe for the quota. It is provided in seconds.
+	TimeframeLimit int `json:"timeframe_limit"`
+	// MaxCalls defines the maximum quota per timeframe
+	MaxCalls int `json:"max_calls"`
+	// Count provides the API calls
+	Count             int `json:"count"`
+	RequestsAvailable int `json:"requests_available"`
 }
 
 type ErrorPayload struct {
@@ -96,6 +123,40 @@ type ResponseError struct {
 
 func (r *ResponseError) Error() string {
 	return r.ErrorPayload.Message
+}
+
+type RateLimitReached interface {
+	error
+	RateLimitReached() bool
+	RetryAfter() string
+}
+
+func rateLimitReached(message string) RateLimitReachedError {
+	if message == "" {
+		message = "Rate limit reached"
+	}
+	return RateLimitReachedError(message)
+}
+
+type RateLimitReachedError string
+
+func (r RateLimitReachedError) Error() string {
+	return string(r)
+}
+
+func (r RateLimitReachedError) RateLimitReached() bool {
+	return true
+}
+
+func (r RateLimitReachedError) Temporary() bool {
+	return true
+}
+
+func IsRateLimitReached(err error) bool {
+	if e, ok := err.(RateLimitReached); ok {
+		return e.RateLimitReached()
+	}
+	return false
 }
 
 type NotFound interface {

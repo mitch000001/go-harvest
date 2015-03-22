@@ -49,4 +49,11 @@ func main() {
 			}
 		}
 	}
+	rateLimit, err := client.RateLimitStatus()
+	if err != nil {
+		fmt.Printf("There was an error fetching the rate limits:\n")
+		fmt.Printf("%T: %v\n", err, err)
+		os.Exit(1)
+	}
+	fmt.Printf("Rate limit status: %+#v\n", rateLimit)
 }
