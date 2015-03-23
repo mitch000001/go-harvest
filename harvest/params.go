@@ -102,3 +102,28 @@ func (p *Params) ForUser(user *User) *Params {
 	p.Set("user_id", string(user.Id()))
 	return p
 }
+
+func (p *Params) ByClient(client *Client) *Params {
+	p.init()
+	p.Set("client", string(client.Id()))
+	return p
+}
+
+func (p *Params) Page(page int) *Params {
+	p.init()
+	p.Set("page", string(page))
+	return p
+}
+
+// Available status:
+//   open    - sent to the client but no payment recieved
+//   partial - partial payment was recorded
+//   draft   - Harvest did not sent this to a client, nor recorded any payments
+//   paid    - invoice paid in full
+//   unpaid  - unpaid invoices
+//   pastdue - past due invoices
+func (p *Params) Status(status string) *Params {
+	p.init()
+	p.Set("status", status)
+	return p
+}

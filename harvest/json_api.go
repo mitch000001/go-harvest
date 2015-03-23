@@ -72,6 +72,10 @@ type JsonApi struct {
 	Client  func() HttpClient // HTTP Client to do the requests
 }
 
+func (a *JsonApi) URL() url.URL {
+	return *a.baseUrl
+}
+
 func (a *JsonApi) Path() string {
 	return a.path
 }

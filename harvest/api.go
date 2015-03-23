@@ -44,6 +44,7 @@ type CrudTogglerEndpointProvider interface {
 }
 
 type Endpoint interface {
+	URL() url.URL
 	Path() string
 }
 
