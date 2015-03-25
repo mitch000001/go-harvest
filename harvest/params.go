@@ -42,10 +42,18 @@ func (p *Params) Values() url.Values {
 	return url.Values(*p)
 }
 
+func (p *Params) Merge(params url.Values) *Params {
+	for k, values := range params {
+		for _, v := range values {
+			p.Add(k, v)
+		}
+	}
+	return p
+}
+
 func (p *Params) ForTimeframe(timeframe Timeframe) *Params {
 	p.init()
-	p.Set("from", timeframe.StartDate.Format("20060102"))
-	p.Set("to", timeframe.EndDate.Format("20060102"))
+	p.Merge(timeframe.ToQuery())
 	return p
 }
 

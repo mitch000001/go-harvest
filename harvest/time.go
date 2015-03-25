@@ -67,6 +67,13 @@ func TimeframeFromQuery(params url.Values) (Timeframe, error) {
 	return Timeframe{StartDate: startDate, EndDate: endDate}, nil
 }
 
+func (tf *Timeframe) ToQuery() url.Values {
+	params := make(url.Values)
+	params.Set("from", tf.StartDate.Format("20060102"))
+	params.Set("to", tf.EndDate.Format("20060102"))
+	return params
+}
+
 func (tf *Timeframe) MarshalJSON() ([]byte, error) {
 	if tf.StartDate.IsZero() || tf.EndDate.IsZero() {
 		return json.Marshal("")
