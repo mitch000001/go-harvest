@@ -6,8 +6,8 @@ import "time"
 
 type Client struct {
 	Name                    string    `json:"name,omitempty"`
-	CreatedAt               time.Time `json"created-at,omitempty"`
-	UpdatedAt               time.Time `json"updated-at,omitempty"`
+	CreatedAt               time.Time `json:"created-at,omitempty"`
+	UpdatedAt               time.Time `json:"updated-at,omitempty"`
 	HighriseId              int       `json:"highrise-id,omitempty"`
 	ID                      int       `json:"id,omitempty"`
 	CacheVersion            int       `json:"cache-version,omitempty"`

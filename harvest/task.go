@@ -6,16 +6,16 @@ import "time"
 
 type Task struct {
 	// If true task will be added as billable upon assigning it to a project
-	BillableByDefault bool `json: "billable-by-default"`
+	BillableByDefault bool `json:"billable-by-default"`
 	// False if hours can be recorded against this task.  True if task is archived -->
 	Deactivated       bool `json:"deactivated"`
-	DefaultHourlyRate int  `json: "default-hourly-rate"`
+	DefaultHourlyRate int  `json:"default-hourly-rate"`
 	ID                int  `json:"id"`
 	// If true task is added to new projects by default -->
-	IsDefault bool      `json: "is-default"`
+	IsDefault bool      `json:"is-default"`
 	Name      string    `json:"name"`
-	CreatedAt time.Time `json"created-at,omitempty"`
-	UpdatedAt time.Time `json"updated-at,omitempty"`
+	CreatedAt time.Time `json:"created-at,omitempty"`
+	UpdatedAt time.Time `json:"updated-at,omitempty"`
 }
 
 func (t *Task) Type() string {

@@ -102,7 +102,7 @@ func TestNotFound(t *testing.T) {
 	expectedMessage := "foo"
 
 	if errMessage != expectedMessage {
-		t.Logf("Expected message to equal 'q', got '%q'\n", expectedMessage, errMessage)
+		t.Logf("Expected message to equal '%q', got '%q'\n", expectedMessage, errMessage)
 		t.Fail()
 	}
 
@@ -114,7 +114,7 @@ func TestNotFound(t *testing.T) {
 	expectedMessage = "Not found"
 
 	if errMessage != expectedMessage {
-		t.Logf("Expected message to equal 'q', got '%q'\n", expectedMessage, errMessage)
+		t.Logf("Expected message to equal '%q', got '%q'\n", expectedMessage, errMessage)
 		t.Fail()
 	}
 }
