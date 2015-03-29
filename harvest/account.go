@@ -1,8 +1,23 @@
 package harvest
 
 type Account struct {
-	Company *Company `json:"company,omitempty"`
-	User    *User    `json:"user,omitempty"`
+	Company *Company     `json:"company,omitempty"`
+	User    *AccountUser `json:"user,omitempty"`
+}
+
+type AccountUser struct {
+	*User
+	TimezoneUtcOffset int    `json:"timezone-utc-offset"`
+	Admin             bool   `json:"admin"`
+	AvatarUrl         string `json:"avatar-url"`
+	ProjectManager    struct {
+		IsProjectManager  bool `json:"is-project-manager"`
+		CanSeeRates       bool `json:"can-see-rates"`
+		CanCreateProjects bool `json:"can-create-projects"`
+		CanCreateInvoices bool `json:"can-create-invoices"`
+	}
+	// true or false (track time using timestamps or duration)
+	TimestampTimers bool `json:"timestamp-timers"`
 }
 
 type WeekStartDay string
