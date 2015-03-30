@@ -39,6 +39,19 @@ func (date *ShortDate) String() string {
 	return date.Format("2006-01-02")
 }
 
+func (s *ShortDate) MarshalText() ([]byte, error) {
+	return []byte(s.Format("2006-01-02")), nil
+}
+
+func (s *ShortDate) UnmarshalText(text []byte) error {
+	time, err := time.Parse("2006-01-02", string(text))
+	if err != nil {
+		return err
+	}
+	*s = ShortDate{time}
+	return nil
+}
+
 type Timeframe struct {
 	StartDate ShortDate
 	EndDate   ShortDate
