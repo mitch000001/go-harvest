@@ -13,6 +13,27 @@ import (
 	"testing"
 )
 
+func TestClientProviderFunc(t *testing.T) {
+	called := false
+	fn := func() *http.Client {
+		called = true
+		return &http.Client{}
+	}
+	clientProviderFunc := ClientProviderFunc(fn)
+
+	client := clientProviderFunc.Client()
+
+	if client == nil {
+		t.Logf("Expected client, got nil\n")
+		t.Fail()
+	}
+
+	if !called {
+		t.Logf("Expected clientfunc to get called, was not\n")
+		t.Fail()
+	}
+}
+
 type testPayload struct {
 	ID   int
 	Data string
