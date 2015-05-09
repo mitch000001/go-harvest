@@ -12,6 +12,10 @@ import (
 	"testing"
 )
 
+func init() {
+	infoMode = false
+}
+
 func TestNewJsonApiPayload(t *testing.T) {
 	name := "foo"
 	marshaledValue := []byte("bar")
@@ -154,7 +158,7 @@ func TestJsonApiPayloadUnmarshalJSON(t *testing.T) {
 
 func TestJsonApiProcessRequest(t *testing.T) {
 	testClient := &testHttpClient{}
-	testClient.setResponseBody(http.StatusOK, emptyReadCloser())
+	testClient.setResponseBody(http.StatusOK, emptyReader())
 	api := createJsonTestApi(testClient)
 
 	path := "qux"
@@ -206,7 +210,7 @@ func TestJsonApiAll(t *testing.T) {
 		ID:   12,
 		Data: "foobar",
 	}
-	testClient.setResponsePayloadAsArray(http.StatusOK, testData)
+	testClient.setResponsePayloadAsArray(http.StatusOK, testData, "Test")
 
 	var data []*testPayload
 
@@ -233,7 +237,7 @@ func TestJsonApiAll(t *testing.T) {
 	}
 
 	// Testing url query params
-	testClient.setResponseBody(http.StatusOK, emptyReadCloser())
+	testClient.setResponseBody(http.StatusOK, emptyReader())
 
 	data = nil
 	params := url.Values{}
@@ -256,7 +260,7 @@ func TestJsonApiFind(t *testing.T) {
 		ID:   12,
 		Data: "foobar",
 	}
-	testClient.setResponsePayload(http.StatusOK, nil, testData)
+	testClient.setResponsePayload(http.StatusOK, nil, testData, "Test")
 
 	var data *testPayload
 
@@ -278,7 +282,7 @@ func TestJsonApiFind(t *testing.T) {
 	}
 
 	// Testing nonexisting id
-	testClient.setResponseBody(http.StatusNotFound, emptyReadCloser())
+	testClient.setResponseBody(http.StatusNotFound, emptyReader())
 
 	data = nil
 
@@ -296,7 +300,7 @@ func TestJsonApiFind(t *testing.T) {
 	}
 
 	// Testing url query params
-	testClient.setResponseBody(http.StatusOK, emptyReadCloser())
+	testClient.setResponseBody(http.StatusOK, emptyReader())
 
 	data = nil
 	params := url.Values{}
@@ -320,7 +324,7 @@ func TestJsonApiCreate(t *testing.T) {
 	}
 
 	header := http.Header{"Location": []string{fmt.Sprintf("/%s/4", api.path)}}
-	testClient.setResponsePayload(http.StatusCreated, header, nil)
+	testClient.setResponsePayload(http.StatusCreated, header, nil, "")
 
 	err := api.Create(&testData)
 
@@ -337,7 +341,7 @@ func TestJsonApiCreate(t *testing.T) {
 	// test invalid data
 	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
-	testClient.setResponseBody(http.StatusBadRequest, bytesToReadCloser(bodyBytes))
+	testClient.setResponseBody(http.StatusBadRequest, bytes.NewReader(bodyBytes))
 
 	err = api.Create(&testData)
 
@@ -364,7 +368,7 @@ func TestJsonApiUpdate(t *testing.T) {
 		Data: "foobar",
 	}
 
-	testClient.setResponsePayload(http.StatusOK, nil, nil)
+	testClient.setResponsePayload(http.StatusOK, nil, nil, "")
 
 	err := api.Update(&testData)
 
@@ -392,7 +396,7 @@ func TestJsonApiUpdate(t *testing.T) {
 	// Failing update
 	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
-	testClient.setResponseBody(http.StatusBadRequest, bytesToReadCloser(bodyBytes))
+	testClient.setResponseBody(http.StatusBadRequest, bytes.NewReader(bodyBytes))
 
 	err = api.Update(&testData)
 
@@ -419,7 +423,7 @@ func TestJsonApiDelete(t *testing.T) {
 		Data: "foobar",
 	}
 
-	testClient.setResponsePayload(http.StatusOK, nil, nil)
+	testClient.setResponsePayload(http.StatusOK, nil, nil, "")
 
 	err := api.Delete(&testData)
 
@@ -447,7 +451,7 @@ func TestJsonApiDelete(t *testing.T) {
 	// Failing delete
 	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
-	testClient.setResponseBody(http.StatusBadRequest, bytesToReadCloser(bodyBytes))
+	testClient.setResponseBody(http.StatusBadRequest, bytes.NewReader(bodyBytes))
 
 	err = api.Delete(&testData)
 
@@ -491,7 +495,7 @@ func TestJsonApiToggle(t *testing.T) {
 		IsActive: true,
 	}
 
-	testClient.setResponsePayload(http.StatusOK, nil, nil)
+	testClient.setResponsePayload(http.StatusOK, nil, nil, "")
 
 	err := api.Toggle(&testData)
 
@@ -524,7 +528,7 @@ func TestJsonApiToggle(t *testing.T) {
 	testData.IsActive = true
 	body := &ErrorPayload{Message: "FAIL"}
 	bodyBytes := panicErr(json.Marshal(&body)).([]byte)
-	testClient.setResponseBody(http.StatusBadRequest, bytesToReadCloser(bodyBytes))
+	testClient.setResponseBody(http.StatusBadRequest, bytes.NewReader(bodyBytes))
 
 	err = api.Toggle(&testData)
 

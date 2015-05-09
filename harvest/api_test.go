@@ -52,9 +52,10 @@ func (t *testPayload) SetId(id int) {
 }
 
 type testHttpClient struct {
-	testRequest  *http.Request
-	testResponse *http.Response
-	testError    error
+	testRequest      *http.Request
+	testResponse     *http.Response
+	testResponseBody *bytes.Buffer
+	testError        error
 }
 
 func (t *testHttpClient) Do(request *http.Request) (*http.Response, error) {
@@ -89,33 +90,34 @@ func (t *testHttpClient) testRequestFor(tt *testing.T, testData map[string]inter
 	}
 }
 
-func (t *testHttpClient) setResponsePayload(statusCode int, header http.Header, data interface{}) {
+func (t *testHttpClient) setResponsePayload(statusCode int, header http.Header, data interface{}, payloadName string) {
 	testJson, err := json.Marshal(&data)
 	if err != nil {
 		panic(err)
 	}
 	payload := &JsonApiPayload{
-		name:           "Test",
+		name:           payloadName,
 		marshaledValue: testJson,
 	}
 	marshaled, err := json.Marshal(&payload)
 	if err != nil {
 		panic(err)
 	}
-	t.setResponseBody(statusCode, ioutil.NopCloser(bytes.NewBuffer(marshaled)))
+	t.testResponseBody = bytes.NewBuffer(marshaled)
+	t.setResponseBody(statusCode, t.testResponseBody)
 	for k, v := range header {
 		t.testResponse.Header[k] = v
 	}
 }
 
-func (t *testHttpClient) setResponsePayloadAsArray(statusCode int, data interface{}) {
+func (t *testHttpClient) setResponsePayloadAsArray(statusCode int, data interface{}, payloadName string) {
 	testJson, err := json.Marshal(&data)
 	if err != nil {
 		panic(err)
 	}
 	payload := []*JsonApiPayload{
 		&JsonApiPayload{
-			name:           "Test",
+			name:           payloadName,
 			marshaledValue: testJson,
 		},
 	}
@@ -123,15 +125,16 @@ func (t *testHttpClient) setResponsePayloadAsArray(statusCode int, data interfac
 	if err != nil {
 		panic(err)
 	}
-	t.setResponseBody(statusCode, ioutil.NopCloser(bytes.NewBuffer(marshaled)))
+	t.testResponseBody = bytes.NewBuffer(marshaled)
+	t.setResponseBody(statusCode, t.testResponseBody)
 }
 
-func (t *testHttpClient) setResponseBody(statusCode int, body io.ReadCloser) {
+func (t *testHttpClient) setResponseBody(statusCode int, body io.Reader) {
 	if t.testResponse == nil {
 		t.testResponse = &http.Response{}
 	}
 	t.testResponse.StatusCode = statusCode
-	t.testResponse.Body = body
+	t.testResponse.Body = ioutil.NopCloser(body)
 	header := make(http.Header, 0)
 	header.Add("Content-Type", "application/json; charset=utf-8")
 	t.testResponse.Header = header
@@ -197,12 +200,8 @@ func (s sortedBytes) Len() int           { return len(s) }
 func (s sortedBytes) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s sortedBytes) Less(i, j int) bool { return s[i] < s[j] }
 
-func bytesToReadCloser(data []byte) io.ReadCloser {
-	return ioutil.NopCloser(bytes.NewReader(data))
-}
-
-func emptyReadCloser() io.ReadCloser {
-	return ioutil.NopCloser(bytes.NewReader([]byte{}))
+func emptyReader() io.Reader {
+	return bytes.NewReader([]byte{})
 }
 
 type apiWrapperTestData struct {

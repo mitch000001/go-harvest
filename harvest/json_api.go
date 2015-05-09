@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var apiPayloadJSONTemplate string = `{"%s":%s}`
@@ -119,10 +121,10 @@ func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Res
 	if err != nil {
 		return nil, err
 	}
-	// TODO: adapt tests to always get a response if err is nil
 	if ct := response.Header.Get("Content-Type"); !strings.Contains(ct, "application/json") {
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
+			info.Printf("Got result with no body\n")
 			body = []byte("NO BODY")
 		}
 		return nil, fmt.Errorf("Bad Request: \nResponse has wrong Content-Type '%q'\nRequest: %+#v\nRequest URL: %s\nResponse: %+#v\nBody: %s\n", ct, request, request.URL, response, string(body))
@@ -135,7 +137,11 @@ func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Res
 	if response.StatusCode == http.StatusServiceUnavailable {
 		response.Body.Close()
 		retryAfter := response.Header.Get("Retry-After")
-		return nil, rateLimitReached(retryAfter)
+		duration, err := strconv.Atoi(retryAfter)
+		if err != nil {
+			info.Printf("Got error while parsing retry-after header %q: %T:%v\n", retryAfter, err, err)
+		}
+		return nil, NewRateLimitReachedError("", time.Duration(duration)*time.Second)
 	}
 	return response, nil
 }

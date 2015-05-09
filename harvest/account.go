@@ -5,6 +5,10 @@ type Account struct {
 	User    *AccountUser `json:"user,omitempty"`
 }
 
+type AccountPayload struct {
+	Account *Account `json:"account"`
+}
+
 type AccountUser struct {
 	*User
 	TimezoneUtcOffset int    `json:"timezone-utc-offset"`

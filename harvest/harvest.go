@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"strings"
+	"time"
 )
 
 const basePathTemplate = "https://%s.harvestapp.com/"
@@ -77,15 +78,16 @@ func (h *Harvest) Account() (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := Account{}
-	err = json.Unmarshal(responseBytes, &account)
+	var payload AccountPayload
+	err = json.Unmarshal(responseBytes, &payload)
 	if err != nil {
+		info.Printf("%T: %v\n", err, err)
 		return nil, err
 	}
-	return &account, nil
+	return payload.Account, nil
 }
 
-func (h *Harvest) RateLimitStatus() (interface{}, error) {
+func (h *Harvest) RateLimitStatus() (*RateLimit, error) {
 	response, err := h.api.Process("GET", "account/rate_limit_status", nil)
 	if err != nil {
 		return nil, err
@@ -100,7 +102,7 @@ func (h *Harvest) RateLimitStatus() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return limit, nil
+	return &limit, nil
 }
 
 type RateLimit struct {
@@ -128,27 +130,34 @@ func (r *ResponseError) Error() string {
 type RateLimitReached interface {
 	error
 	RateLimitReached() bool
-	RetryAfter() string
+	RetryAfter() time.Duration
 }
 
-func rateLimitReached(message string) RateLimitReachedError {
+func NewRateLimitReachedError(message string, retryAfter time.Duration) *RateLimitReachedError {
 	if message == "" {
 		message = "Rate limit reached"
 	}
-	return RateLimitReachedError(message)
+	return &RateLimitReachedError{message: message, retryAfter: retryAfter}
 }
 
-type RateLimitReachedError string
-
-func (r RateLimitReachedError) Error() string {
-	return string(r)
+type RateLimitReachedError struct {
+	message    string
+	retryAfter time.Duration
 }
 
-func (r RateLimitReachedError) RateLimitReached() bool {
+func (r *RateLimitReachedError) Error() string {
+	return r.message
+}
+
+func (r *RateLimitReachedError) RateLimitReached() bool {
 	return true
 }
 
-func (r RateLimitReachedError) Temporary() bool {
+func (r *RateLimitReachedError) RetryAfter() time.Duration {
+	return r.retryAfter
+}
+
+func (r *RateLimitReachedError) Temporary() bool {
 	return true
 }
 
