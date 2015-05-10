@@ -5,8 +5,18 @@ import (
 	"time"
 )
 
+// Params is an enhanced url.Values which can also be used without prior
+// initialization. It also defines helper methods to use it as a query params
+// builder
+//
+// The method set to url.Values is identical, but adds lazy initialization.
 type Params url.Values
 
+// init initializes the Params type if it's nil
+//
+// Note that the Params type is a url.Values which itself is a
+// map[string][]string, so an uninitialized Params object is in fact an
+// uninitialized map, so we call make(Params) to initialize it
 func (p *Params) init() {
 	if *p == nil {
 		*p = make(Params)
@@ -14,35 +24,59 @@ func (p *Params) init() {
 }
 
 // Deep copy the Params for another use case
-func (p *Params) Clone() *Params {
+func (p Params) Clone() Params {
+	p.init()
 	cpy := make(Params)
-	for k, v := range *p {
+	for k, v := range p {
 		cpy[k] = v
 	}
-	return &cpy
+	return cpy
 }
 
-func (p *Params) Add(key string, value string) {
-	url.Values(*p).Add(key, value)
+// Get gets the first value associated with the given key.
+// If there are no values associated with the key, Get returns
+// the empty string. To access multiple values, use the map
+// directly.
+func (p Params) Get(key string) string {
+	return url.Values(p).Get(key)
 }
 
-func (p *Params) Set(key string, value string) {
-	url.Values(*p).Set(key, value)
+// Set sets the key to value. It replaces any existing
+// values.
+func (p Params) Set(key string, value string) {
+	p.init()
+	url.Values(p).Set(key, value)
 }
 
-func (p *Params) Get(key string) string {
-	return url.Values(*p).Get(key)
+// Add adds the value to key. It appends to any existing
+// values associated with key.
+func (p Params) Add(key string, value string) {
+	p.init()
+	url.Values(p).Add(key, value)
 }
 
-func (p *Params) Encode() string {
-	return url.Values(*p).Encode()
+// Del deletes the values associated with key.
+func (p Params) Del(key string) {
+	url.Values(p).Del(key)
 }
 
-func (p *Params) Values() url.Values {
-	return url.Values(*p)
+// Encode encodes the values into ``URL encoded'' form
+// ("bar=baz&foo=quux") sorted by key.
+func (p Params) Encode() string {
+	return url.Values(p).Encode()
 }
 
-func (p *Params) Merge(params url.Values) *Params {
+// Values returns the Params object casted to an url.Values
+func (p Params) Values() url.Values {
+	return url.Values(p)
+}
+
+// Merge merges the given url.Values params into the object
+//
+// Note that this method changes the receiver in that it adds the values from
+// params into the receiver. Also, no data in the receiver are lost
+func (p Params) Merge(params url.Values) Params {
+	p.init()
 	for k, values := range params {
 		for _, v := range values {
 			p.Add(k, v)
@@ -51,7 +85,8 @@ func (p *Params) Merge(params url.Values) *Params {
 	return p
 }
 
-func (p *Params) ForTimeframe(timeframe Timeframe) *Params {
+// ForTimeframe adds query params for the given timeframe
+func (p Params) ForTimeframe(timeframe Timeframe) Params {
 	p.init()
 	p.Merge(timeframe.ToQuery())
 	return p
