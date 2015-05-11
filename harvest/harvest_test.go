@@ -217,6 +217,14 @@ func TestHarvestAccount(t *testing.T) {
 		t.Logf("Expected account not to be nil\n")
 		t.Fail()
 	} else {
+		if !reflect.DeepEqual(account.Company, testAccount.Company) {
+			t.Logf("Expected account company to equal \n%+#v\n\tgot\n%+#v\n", testAccount.Company, account.Company)
+			t.Fail()
+		}
+		if !reflect.DeepEqual(account.User, testAccount.User) {
+			t.Logf("Expected account user to equal \n%+#v\n\tgot\n%+#v\n", testAccount.User, account.User)
+			t.Fail()
+		}
 		if !reflect.DeepEqual(account, testAccount) {
 			t.Logf("Expected account to equal \n%+#v\n\tgot\n%+#v\n", testAccount, account)
 			t.Fail()
