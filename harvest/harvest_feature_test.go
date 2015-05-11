@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mitch000001/go-harvest/cmd/harvest"
 	"github.com/mitch000001/go-harvest/harvest"
+	"github.com/mitch000001/go-harvest/harvest/auth"
 )
 
 func createClient(t *testing.T) *harvest.Harvest {
@@ -15,7 +15,12 @@ func createClient(t *testing.T) *harvest.Harvest {
 	username := os.Getenv("HARVEST_USERNAME")
 	password := os.Getenv("HARVEST_PASSWORD")
 
-	client, err := main.NewBasicAuthClient(subdomain, &main.BasicAuthConfig{username, password})
+	config := auth.BasicAuthConfig{
+		Username: username,
+		Password: password,
+	}
+
+	client, err := harvest.New(subdomain, auth.NewBasicAuthClientProvider(&config).Client)
 	if err != nil {
 		t.Fatal(err)
 	}
