@@ -101,7 +101,7 @@ func TestNewHarvest(t *testing.T) {
 }
 
 func TestNotFound(t *testing.T) {
-	notFoundError := notFound("foo")
+	notFoundError := NewNotFoundError("foo")
 
 	errMessage := notFoundError.Error()
 
@@ -113,7 +113,7 @@ func TestNotFound(t *testing.T) {
 	}
 
 	// No message given
-	notFoundError = notFound("")
+	notFoundError = NewNotFoundError("")
 
 	errMessage = notFoundError.Error()
 
@@ -126,7 +126,7 @@ func TestNotFound(t *testing.T) {
 }
 
 func TestNotFoundNotFound(t *testing.T) {
-	notFoundError := notFound("")
+	notFoundError := NewNotFoundError("")
 
 	ok := notFoundError.NotFound()
 
@@ -147,7 +147,7 @@ func (f found) NotFound() bool {
 }
 
 func TestIsNotFound(t *testing.T) {
-	notFoundError := notFound("")
+	notFoundError := NewNotFoundError("")
 
 	ok := IsNotFound(notFoundError)
 

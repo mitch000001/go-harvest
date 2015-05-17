@@ -173,20 +173,22 @@ type NotFound interface {
 	NotFound() bool
 }
 
-func notFound(message string) NotFound {
+func NewNotFoundError(message string) *NotFoundError {
 	if message == "" {
 		message = "Not found"
 	}
-	return NotFoundError(message)
+	return &NotFoundError{message}
 }
 
-type NotFoundError string
-
-func (n NotFoundError) Error() string {
-	return string(n)
+type NotFoundError struct {
+	message string
 }
 
-func (n NotFoundError) NotFound() bool {
+func (n *NotFoundError) Error() string {
+	return n.message
+}
+
+func (n *NotFoundError) NotFound() bool {
 	return true
 }
 

@@ -132,7 +132,7 @@ func (a *JsonApi) Process(method string, path string, body io.Reader) (*http.Res
 	if response.StatusCode == http.StatusNotFound {
 		response.Body.Close()
 		reason := response.Header.Get("X-404-Reason")
-		return nil, notFound(reason)
+		return nil, NewNotFoundError(reason)
 	}
 	if response.StatusCode == http.StatusServiceUnavailable {
 		response.Body.Close()
