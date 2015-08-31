@@ -52,6 +52,13 @@ func (s *ShortDate) UnmarshalText(text []byte) error {
 	return nil
 }
 
+func NewTimeframe(startYear int, startMonth time.Month, startDay int, endYear int, endMonth time.Month, endDay int, location *time.Location) Timeframe {
+	return Timeframe{
+		StartDate: Date(startYear, startMonth, startDay, location),
+		EndDate:   Date(endYear, endMonth, endDay, location),
+	}
+}
+
 type Timeframe struct {
 	StartDate ShortDate
 	EndDate   ShortDate

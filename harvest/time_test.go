@@ -140,6 +140,20 @@ func mustLoad(loc *time.Location, err error) *time.Location {
 	return loc
 }
 
+func TestNewTimeframe(t *testing.T) {
+	timeframe := NewTimeframe(2015, 1, 1, 2015, 2, 1, time.UTC)
+
+	expectedTimeframe := Timeframe{
+		StartDate: Date(2015, 1, 1, time.UTC),
+		EndDate:   Date(2015, 2, 1, time.UTC),
+	}
+
+	if !reflect.DeepEqual(expectedTimeframe, timeframe) {
+		t.Logf("Expected new timeframe to equal\n%s\n\tgot:\n%s\n", expectedTimeframe, timeframe)
+		t.Fail()
+	}
+}
+
 func TestTimeframeMarshalJSON(t *testing.T) {
 	startDate := ShortDate{time.Date(2014, time.February, 01, 0, 0, 0, 0, time.UTC)}
 	endDate := ShortDate{time.Date(2014, time.April, 01, 0, 0, 0, 0, time.UTC)}
