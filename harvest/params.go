@@ -86,7 +86,7 @@ func (p Params) Merge(params url.Values) Params {
 }
 
 // ForTimeframe adds query params for the given timeframe
-func (p Params) ForTimeframe(timeframe Timeframe) Params {
+func (p *Params) ForTimeframe(timeframe Timeframe) *Params {
 	p.init()
 	p.Merge(timeframe.ToQuery())
 	return p

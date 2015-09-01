@@ -7,7 +7,7 @@ type DayEntry struct {
 	ID        int       `json:"id"`
 	Notes     string    `json:"notes"`
 	ProjectId int       `json:"project-id"`
-	SpentAt   time.Time `json:"spent-at"`
+	SpentAt   ShortDate `json:"spent-at"`
 	TaskId    int       `json:"task-id"`
 	UserId    int       `json:"user-id"`
 	// was this record invoiced, or marked as invoiced
