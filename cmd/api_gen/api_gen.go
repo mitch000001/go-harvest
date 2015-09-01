@@ -67,13 +67,13 @@ func main() {
 		Toggler:  togglerFlag,
 		Scaffold: scaffoldFlag,
 	}
-	fname := fmt.Sprintf(fileNameTmpl, service.Param)
+	fname := fmt.Sprintf(fileNameTmpl, SnakeCase(serviceType))
 	err := writeFile(fname, fileTemplate, service)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
-	fname = fmt.Sprintf(testfileNameTmpl, service.Param)
+	fname = fmt.Sprintf(testfileNameTmpl, SnakeCase(serviceType))
 	err = writeFile(fname, testfileTemplate, service)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -121,6 +121,22 @@ type service struct {
 type field struct {
 	Type string
 	Name string
+}
+
+func SnakeCase(in string) string {
+	runes := []rune(in)
+	var parts []string
+	var lastPos int
+	for i := 0; i < len(runes); i++ {
+		if i > 0 && unicode.IsUpper(runes[i]) {
+			parts = append(parts, strings.ToLower(in[lastPos:i]))
+			lastPos = i
+		}
+	}
+	if lastWord := in[lastPos:]; lastWord != "" {
+		parts = append(parts, strings.ToLower(lastWord))
+	}
+	return strings.Join(parts, "_")
 }
 
 func typeToName(typ string) string {
@@ -217,9 +233,9 @@ type {{.Type}}Service struct {
 
 func New{{.Type}}Service({{range $type, $param := .Fields}}{{$param}} {{$type}}, {{end}}) *{{.Type}}Service {
 	service := {{.Type}}Service{ {{range $type, $param  := .Fields}}
-		{{$param}}: {{$param}},{{end}}
-	}
-	return &service
+	{{$param}}: {{$param}},{{end}}
+}
+return &service
 }
 
 {{if .Crud}}{{template "crud" .}}{{end}}

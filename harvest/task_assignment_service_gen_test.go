@@ -9,88 +9,88 @@ import (
 )
 
 var (
-	expectedUserAssignmentServiceParams	= url.Values{"foo": []string{"bar"}}
+	expectedTaskAssignmentServiceParams	= url.Values{"foo": []string{"bar"}}
 
-	testsUserAssignmentService	= map[string]struct {	// apiFn to testData
+	testsTaskAssignmentService	= map[string]struct {	// apiFn to testData
 		testData	*apiWrapperTestData
 		testFn		testFunc
 		args		[]interface{}
 	}{
 		"All": {
 			&apiWrapperTestData{
-				expectedParams:		expectedUserAssignmentServiceParams,
-				expectedDataType:	reflect.TypeOf(&[]*UserAssignment{}),
+				expectedParams:		expectedTaskAssignmentServiceParams,
+				expectedDataType:	reflect.TypeOf(&[]*TaskAssignment{}),
 				expectedErrorMessage:	"ERR",
 			},
 			testApiAllWrapper,
-			[]interface{}{&[]*UserAssignment{}, expectedUserAssignmentServiceParams},
+			[]interface{}{&[]*TaskAssignment{}, expectedTaskAssignmentServiceParams},
 		},
 		"Find": {
 			&apiWrapperTestData{
-				expectedParams:		expectedUserAssignmentServiceParams,
+				expectedParams:		expectedTaskAssignmentServiceParams,
 				expectedIdType:		reflect.TypeOf(12),
-				expectedDataType:	reflect.TypeOf(&UserAssignment{}),
+				expectedDataType:	reflect.TypeOf(&TaskAssignment{}),
 				expectedErrorMessage:	"ERR",
 			},
 			testApiFindWrapper,
-			[]interface{}{12, &UserAssignment{}, expectedUserAssignmentServiceParams},
+			[]interface{}{12, &TaskAssignment{}, expectedTaskAssignmentServiceParams},
 		},
 		"Create": {
 			&apiWrapperTestData{
-				expectedDataType:	reflect.TypeOf(&UserAssignment{}),
+				expectedDataType:	reflect.TypeOf(&TaskAssignment{}),
 				expectedErrorMessage:	"ERR",
 			},
 			testApiCreateWrapper,
-			[]interface{}{&UserAssignment{}},
+			[]interface{}{&TaskAssignment{}},
 		},
 		"Update": {
 			&apiWrapperTestData{
-				expectedDataType:	reflect.TypeOf(&UserAssignment{}),
+				expectedDataType:	reflect.TypeOf(&TaskAssignment{}),
 				expectedErrorMessage:	"ERR",
 			},
 			testApiUpdateWrapper,
-			[]interface{}{&UserAssignment{}},
+			[]interface{}{&TaskAssignment{}},
 		},
 		"Delete": {
 			&apiWrapperTestData{
-				expectedDataType:	reflect.TypeOf(&UserAssignment{}),
+				expectedDataType:	reflect.TypeOf(&TaskAssignment{}),
 				expectedErrorMessage:	"ERR",
 			},
 			testApiDeleteWrapper,
-			[]interface{}{&UserAssignment{}},
+			[]interface{}{&TaskAssignment{}},
 		},
 	}
 )
 
-func TestUserAssignmentServiceAll(t *testing.T) {
-	testUserAssignmentServiceMethod(t, "All")
+func TestTaskAssignmentServiceAll(t *testing.T) {
+	testTaskAssignmentServiceMethod(t, "All")
 }
 
-func TestUserAssignmentServiceFind(t *testing.T) {
-	testUserAssignmentServiceMethod(t, "Find")
+func TestTaskAssignmentServiceFind(t *testing.T) {
+	testTaskAssignmentServiceMethod(t, "Find")
 }
 
-func TestUserAssignmentServiceCreate(t *testing.T) {
-	testUserAssignmentServiceMethod(t, "Create")
+func TestTaskAssignmentServiceCreate(t *testing.T) {
+	testTaskAssignmentServiceMethod(t, "Create")
 }
 
-func TestUserAssignmentServiceUpdate(t *testing.T) {
-	testUserAssignmentServiceMethod(t, "Update")
+func TestTaskAssignmentServiceUpdate(t *testing.T) {
+	testTaskAssignmentServiceMethod(t, "Update")
 }
 
-func TestUserAssignmentServiceDelete(t *testing.T) {
-	testUserAssignmentServiceMethod(t, "Delete")
+func TestTaskAssignmentServiceDelete(t *testing.T) {
+	testTaskAssignmentServiceMethod(t, "Delete")
 }
 
-func testUserAssignmentServiceMethod(t *testing.T, name string) {
+func testTaskAssignmentServiceMethod(t *testing.T, name string) {
 	called := false
-	test, ok := testsUserAssignmentService[name]
+	test, ok := testsTaskAssignmentService[name]
 	if !ok {
 		t.Logf("No test data for method '%s' defined.\n", name)
 		t.FailNow()
 	}
 	api := test.testFn(test.testData, &called)
-	service := &UserAssignmentService{endpoint: api}
+	service := &TaskAssignmentService{endpoint: api}
 	serviceValue := reflect.ValueOf(service)
 	testFn := serviceValue.MethodByName(name)
 	if !testFn.IsValid() {

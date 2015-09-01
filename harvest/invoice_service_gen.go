@@ -10,14 +10,14 @@ import (
 )
 
 type InvoiceService struct {
-	endpoint CrudEndpoint
-	provider CrudEndpointProvider
+	endpoint	CrudEndpoint
+	provider	CrudEndpointProvider
 }
 
 func NewInvoiceService(endpoint CrudEndpoint, provider CrudEndpointProvider) *InvoiceService {
 	service := InvoiceService{
-		endpoint: endpoint,
-		provider: provider,
+		endpoint:	endpoint,
+		provider:	provider,
 	}
 	return &service
 }

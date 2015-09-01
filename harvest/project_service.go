@@ -10,6 +10,14 @@ func (p *ProjectService) UserAssignments(project *Project) *UserAssignmentServic
 	return NewUserAssignmentService(endpoint)
 }
 
+func (p *ProjectService) TaskAssignments(project *Project) *TaskAssignmentService {
+	id := project.Id()
+	projectPath := p.endpoint.Path()
+	path := fmt.Sprintf("%s/%d/task_assignments", projectPath, id)
+	endpoint := p.provider.CrudEndpoint(path)
+	return NewTaskAssignmentService(endpoint)
+}
+
 func (p *ProjectService) DayEntries(project *Project) *DayEntryService {
 	id := project.Id()
 	projectPath := p.endpoint.Path()
