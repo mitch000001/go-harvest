@@ -154,6 +154,56 @@ func TestNewTimeframe(t *testing.T) {
 	}
 }
 
+func TestTimeframeIsInTimeframe(t *testing.T) {
+	tests := []struct {
+		date          ShortDate
+		timeframe     Timeframe
+		isInTimeframe bool
+	}{
+		{
+			Date(2015, 1, 3, time.Local),
+			NewTimeframe(2015, 1, 1, 2015, 2, 1, time.Local),
+			true,
+		},
+		{
+			Date(2015, 3, 1, time.Local),
+			NewTimeframe(2015, 1, 1, 2015, 2, 1, time.Local),
+			false,
+		},
+		{
+			Date(2015, 2, 1, time.Local),
+			NewTimeframe(2015, 1, 1, 2015, 2, 1, time.Local),
+			true,
+		},
+		{
+			ShortDate{time.Date(2015, 2, 1, 23, 59, 59, 999, time.Local)},
+			NewTimeframe(2015, 1, 1, 2015, 2, 1, time.Local),
+			true,
+		},
+		{
+			Date(2015, 1, 1, time.UTC),
+			NewTimeframe(2015, 1, 1, 2015, 2, 1, time.Local),
+			true,
+		},
+		{
+			Date(2015, 2, 2, time.UTC),
+			NewTimeframe(2015, 1, 1, 2015, 2, 1, time.Local),
+			false,
+		},
+	}
+	for _, test := range tests {
+		if ok := test.timeframe.IsInTimeframe(test.date); ok != test.isInTimeframe {
+			if ok {
+				t.Logf("Expected date %q not to be in timeframe %q, but was\n", test.date, test.timeframe)
+				t.Fail()
+			} else {
+				t.Logf("Expected date %q to be in timeframe %q, but was not\n", test.date, test.timeframe)
+				t.Fail()
+			}
+		}
+	}
+}
+
 func TestTimeframeMarshalJSON(t *testing.T) {
 	startDate := ShortDate{time.Date(2014, time.February, 01, 0, 0, 0, 0, time.UTC)}
 	endDate := ShortDate{time.Date(2014, time.April, 01, 0, 0, 0, 0, time.UTC)}

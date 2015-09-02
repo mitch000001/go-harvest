@@ -87,6 +87,16 @@ func TimeframeFromQuery(params url.Values) (Timeframe, error) {
 	return Timeframe{StartDate: startDate, EndDate: endDate}, nil
 }
 
+func (tf Timeframe) IsInTimeframe(date ShortDate) bool {
+	if tf.StartDate.Truncate(24 * time.Hour).Equal(date.Truncate(24 * time.Hour)) {
+		return true
+	}
+	if tf.EndDate.Truncate(24 * time.Hour).Equal(date.Truncate(24 * time.Hour)) {
+		return true
+	}
+	return tf.StartDate.Before(date.Time) && tf.EndDate.After(date.Time)
+}
+
 func (tf *Timeframe) ToQuery() url.Values {
 	params := make(url.Values)
 	params.Set("from", tf.StartDate.Format("20060102"))
