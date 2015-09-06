@@ -187,8 +187,8 @@ func TestHarvestAccount(t *testing.T) {
 			User: &User{
 				FirstName: "Max",
 				LastName:  "Muster",
-				CreatedAt: time.Unix(0, 0),
-				UpdatedAt: time.Unix(0, 0),
+				CreatedAt: time.Time{}.UTC(),
+				UpdatedAt: time.Time{}.UTC(),
 			},
 			Admin: true,
 		},
@@ -223,6 +223,10 @@ func TestHarvestAccount(t *testing.T) {
 		}
 		if !reflect.DeepEqual(account.User, testAccount.User) {
 			t.Logf("Expected account user to equal \n%+#v\n\tgot\n%+#v\n", testAccount.User, account.User)
+			t.Fail()
+		}
+		if !reflect.DeepEqual(account.User.User, testAccount.User.User) {
+			t.Logf("Expected account user user to equal \n%+#v\n\tgot\n%+#v\n", testAccount.User.User, account.User.User)
 			t.Fail()
 		}
 		if !reflect.DeepEqual(account, testAccount) {
