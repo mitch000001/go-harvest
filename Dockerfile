@@ -1,11 +1,11 @@
 FROM ubuntu:12.04
 
-RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  openssl git mercurial subversion bzr
+RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y\
+  wget git mercurial subversion bzr
 
-ADD https://storage.googleapis.com/golang/go1.5.linux-amd64.tar.gz /usr/local/go1.5.tar.gz
 WORKDIR /usr/local
-RUN tar -C /usr/local -xzf go1.5.tar.gz
+RUN wget https://storage.googleapis.com/golang/go1.5.linux-amd64.tar.gz
+RUN tar -C /usr/local -xzf go1.5.linux-amd64.tar.gz
 RUN ln -s /usr/local/go/bin/go /usr/local/bin/go
 
 RUN adduser --gecos '' --disabled-password harvest
