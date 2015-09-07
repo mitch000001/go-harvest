@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"fmt"
 	"net/url"
 
 	"github.com/mitch000001/go-harvest/harvest"
@@ -11,8 +12,18 @@ type DayEntryService struct {
 	harvest.CrudEndpoint
 }
 
-func (d DayEntryService) All(entries interface{}, params url.Values) error {
-	*(entries.(*[]*harvest.DayEntry)) = d.Entries
+func (d DayEntryService) All(data interface{}, params url.Values) error {
+	timeframe, err := harvest.TimeframeFromQuery(params)
+	if err != nil {
+		return fmt.Errorf("Error while parsing timeframe: %v", err)
+	}
+	entries := make([]*harvest.DayEntry, 0)
+	for _, entry := range d.Entries {
+		if timeframe.IsInTimeframe(entry.SpentAt) {
+			entries = append(entries, entry)
+		}
+	}
+	*(data.(*[]*harvest.DayEntry)) = entries
 	return nil
 }
 

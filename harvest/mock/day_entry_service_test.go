@@ -38,13 +38,16 @@ func TestNewDayEntryService(t *testing.T) {
 func TestDayEntryServiceAll(t *testing.T) {
 	service := DayEntryService{
 		Entries: []*harvest.DayEntry{
-			&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2},
+			&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
+			&harvest.DayEntry{ID: 2, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 2, 1, time.UTC)},
 		},
 	}
 
 	var entries []*harvest.DayEntry
+	var params harvest.Params
+	timeframe := harvest.NewTimeframe(2015, 1, 1, 2015, 4, 1, time.UTC)
 
-	err := service.All(&entries, nil)
+	err := service.All(&entries, params.ForTimeframe(timeframe).Values())
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
@@ -52,7 +55,28 @@ func TestDayEntryServiceAll(t *testing.T) {
 	}
 
 	expectedEntries := []*harvest.DayEntry{
-		&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2},
+		&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
+		&harvest.DayEntry{ID: 2, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 2, 1, time.UTC)},
+	}
+
+	if !reflect.DeepEqual(expectedEntries, entries) {
+		t.Logf("Expected entries to equal\n%q\n\tgot\n%q\n", expectedEntries, entries)
+		t.Fail()
+	}
+
+	// Proper filtering for timeframes
+	timeframe = harvest.NewTimeframe(2015, 1, 1, 2015, 1, 25, time.UTC)
+	params = harvest.Params{}
+
+	err = service.All(&entries, params.ForTimeframe(timeframe).Values())
+
+	if err != nil {
+		t.Logf("Expected no error, got %T:%v\n", err, err)
+		t.Fail()
+	}
+
+	expectedEntries = []*harvest.DayEntry{
+		&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
 	}
 
 	if !reflect.DeepEqual(expectedEntries, entries) {

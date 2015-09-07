@@ -16,7 +16,7 @@ func TestNewUserService(t *testing.T) {
 		},
 		DayEntryService: DayEntryService{
 			Entries: []*harvest.DayEntry{
-				&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8},
+				&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
 			},
 		},
 	}
@@ -54,7 +54,7 @@ func TestNewUserService(t *testing.T) {
 
 	var actualEntries []*harvest.DayEntry
 	expectedEntries := []*harvest.DayEntry{
-		&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8},
+		&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
 	}
 	timeframe := harvest.NewTimeframe(2015, 1, 1, 2015, 4, 1, time.UTC)
 	var params harvest.Params
