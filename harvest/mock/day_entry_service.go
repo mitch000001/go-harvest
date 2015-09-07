@@ -8,6 +8,7 @@ import (
 
 type DayEntryService struct {
 	Entries []*harvest.DayEntry
+	harvest.CrudEndpoint
 }
 
 func (d DayEntryService) All(entries interface{}, params url.Values) error {

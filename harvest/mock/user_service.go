@@ -8,7 +8,8 @@ import (
 )
 
 type UserService struct {
-	Users []*harvest.User
+	Users           []*harvest.User
+	DayEntryService DayEntryService
 }
 
 func (u *UserService) All(users interface{}, params url.Values) error {
@@ -72,8 +73,12 @@ func (u *UserService) URL() url.URL {
 	return url.URL{}
 }
 
+func (u *UserService) CrudEndpoint(path string) harvest.CrudEndpoint {
+	return u.DayEntryService
+}
+
 func NewUserService(userService UserService) *harvest.UserService {
 	var service *harvest.UserService
-	service = harvest.NewUserService(nil, &userService)
+	service = harvest.NewUserService(&userService, &userService)
 	return service
 }

@@ -14,6 +14,11 @@ func TestNewUserService(t *testing.T) {
 		Users: []*harvest.User{
 			&harvest.User{ID: 1, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
 		},
+		DayEntryService: DayEntryService{
+			Entries: []*harvest.DayEntry{
+				&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8},
+			},
+		},
 	}
 
 	userService := NewUserService(mockUserService)
@@ -37,6 +42,32 @@ func TestNewUserService(t *testing.T) {
 
 	if !reflect.DeepEqual(expectedUsers, actualUsers) {
 		t.Logf("Expected users to equal\n%q\n\tgot\n%q\n", expectedUsers, actualUsers)
+		t.Fail()
+	}
+
+	dayEntryService := userService.DayEntries(mockUserService.Users[0])
+
+	if dayEntryService == nil {
+		t.Logf("Expected dayEntryService not to be nil\n")
+		t.Fail()
+	}
+
+	var actualEntries []*harvest.DayEntry
+	expectedEntries := []*harvest.DayEntry{
+		&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8},
+	}
+	timeframe := harvest.NewTimeframe(2015, 1, 1, 2015, 4, 1, time.UTC)
+	var params harvest.Params
+
+	err = dayEntryService.All(&actualEntries, params.ForTimeframe(timeframe).Values())
+
+	if err != nil {
+		t.Logf("Expected no error, got %T:%v\n", err, err)
+		t.Fail()
+	}
+
+	if !reflect.DeepEqual(expectedEntries, actualEntries) {
+		t.Logf("Expected entries to equal\n%q\n\tgot\n%q\n", expectedEntries, actualEntries)
 		t.Fail()
 	}
 }
@@ -232,4 +263,16 @@ func TestUserServiceURL(t *testing.T) {
 		t.Logf("Expected URL to return %q, got %q\n", expectedUrl, actualUrl)
 		t.Fail()
 	}
+}
+
+func TestUserServiceCrudEndpoint(t *testing.T) {
+	mockUserService := UserService{}
+
+	crudEndpoint := mockUserService.CrudEndpoint("entries")
+
+	if crudEndpoint == nil {
+		t.Logf("Expected endpoint not to be nil")
+		t.Fail()
+	}
+	// TODO: what else should we test here?
 }
