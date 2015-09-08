@@ -92,15 +92,15 @@ func (p *Params) ForTimeframe(timeframe Timeframe) *Params {
 	return p
 }
 
-func (p *Params) OnlyBillable(billed bool) *Params {
+func (p *Params) Billable(billable bool) *Params {
 	p.init()
-	var billable string
-	if billed {
-		billable = "yes"
+	var billableParam string
+	if billable {
+		billableParam = "yes"
 	} else {
-		billable = "no"
+		billableParam = "no"
 	}
-	p.Set("billable", billable)
+	p.Set("billable", billableParam)
 	return p
 }
 

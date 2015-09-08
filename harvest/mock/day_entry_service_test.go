@@ -97,7 +97,7 @@ func TestDayEntryServiceAll(t *testing.T) {
 	// proper filtering for billable
 	params = harvest.Params{}
 
-	err = service.All(&entries, params.ForTimeframe(timeframe).OnlyBillable(true).Values())
+	err = service.All(&entries, params.ForTimeframe(timeframe).Billable(true).Values())
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
@@ -117,7 +117,7 @@ func TestDayEntryServiceAll(t *testing.T) {
 	// proper filtering for nonbillable
 	params = harvest.Params{}
 
-	err = service.All(&entries, params.ForTimeframe(timeframe).OnlyBillable(false).Values())
+	err = service.All(&entries, params.ForTimeframe(timeframe).Billable(false).Values())
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
