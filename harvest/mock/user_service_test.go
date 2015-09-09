@@ -18,6 +18,7 @@ func TestNewUserService(t *testing.T) {
 			Entries: []*harvest.DayEntry{
 				&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
 			},
+			UserId: 1,
 		},
 	}
 

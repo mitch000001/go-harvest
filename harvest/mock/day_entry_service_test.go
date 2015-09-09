@@ -12,8 +12,10 @@ import (
 func TestNewDayEntryService(t *testing.T) {
 	service := DayEntryService{
 		Entries: []*harvest.DayEntry{
-			&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2},
+			&harvest.DayEntry{ID: 1, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 2, time.UTC)},
+			&harvest.DayEntry{ID: 1, UserId: 2, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 3, time.UTC)},
 		},
+		UserId: 1,
 	}
 
 	dayEntryService := NewDayEntryService(service)
@@ -33,18 +35,33 @@ func TestNewDayEntryService(t *testing.T) {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
 		t.Fail()
 	}
+
+	expectedEntries := []*harvest.DayEntry{
+		&harvest.DayEntry{ID: 1, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 2, time.UTC)},
+	}
+
+	if !reflect.DeepEqual(expectedEntries, entries) {
+		t.Logf("Expected entries to equal\n%q\n\tgot\n%q\n", expectedEntries, entries)
+		t.Fail()
+	}
 }
 
 func TestDayEntryServiceAll(t *testing.T) {
 	service := DayEntryService{
 		Entries: []*harvest.DayEntry{
-			&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
-			&harvest.DayEntry{ID: 2, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 2, 1, time.UTC)},
-			&harvest.DayEntry{ID: 3, Hours: 8, TaskId: 5, SpentAt: harvest.Date(2015, 1, 19, time.UTC)},
-			&harvest.DayEntry{ID: 4, Hours: 8, TaskId: 7, SpentAt: harvest.Date(2015, 1, 20, time.UTC)},
-			&harvest.DayEntry{ID: 5, Hours: 8, TaskId: 9, SpentAt: harvest.Date(2015, 1, 21, time.UTC)},
+			&harvest.DayEntry{ID: 1, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
+			&harvest.DayEntry{ID: 2, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 2, 1, time.UTC)},
+			&harvest.DayEntry{ID: 3, UserId: 1, Hours: 8, TaskId: 5, SpentAt: harvest.Date(2015, 1, 19, time.UTC)},
+			&harvest.DayEntry{ID: 4, UserId: 1, Hours: 8, TaskId: 7, SpentAt: harvest.Date(2015, 1, 20, time.UTC)},
+			&harvest.DayEntry{ID: 5, UserId: 1, Hours: 8, TaskId: 9, SpentAt: harvest.Date(2015, 1, 21, time.UTC)},
+			&harvest.DayEntry{ID: 11, UserId: 2, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
+			&harvest.DayEntry{ID: 12, UserId: 2, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 2, 1, time.UTC)},
+			&harvest.DayEntry{ID: 13, UserId: 2, Hours: 8, TaskId: 5, SpentAt: harvest.Date(2015, 1, 19, time.UTC)},
+			&harvest.DayEntry{ID: 14, UserId: 2, Hours: 8, TaskId: 7, SpentAt: harvest.Date(2015, 1, 20, time.UTC)},
+			&harvest.DayEntry{ID: 15, UserId: 2, Hours: 8, TaskId: 9, SpentAt: harvest.Date(2015, 1, 21, time.UTC)},
 		},
 		BillableTasks: []int{2, 5},
+		UserId:        1,
 	}
 
 	var entries []*harvest.DayEntry
@@ -59,11 +76,11 @@ func TestDayEntryServiceAll(t *testing.T) {
 	}
 
 	expectedEntries := []*harvest.DayEntry{
-		&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
-		&harvest.DayEntry{ID: 2, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 2, 1, time.UTC)},
-		&harvest.DayEntry{ID: 3, Hours: 8, TaskId: 5, SpentAt: harvest.Date(2015, 1, 19, time.UTC)},
-		&harvest.DayEntry{ID: 4, Hours: 8, TaskId: 7, SpentAt: harvest.Date(2015, 1, 20, time.UTC)},
-		&harvest.DayEntry{ID: 5, Hours: 8, TaskId: 9, SpentAt: harvest.Date(2015, 1, 21, time.UTC)},
+		&harvest.DayEntry{ID: 1, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
+		&harvest.DayEntry{ID: 2, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 2, 1, time.UTC)},
+		&harvest.DayEntry{ID: 3, UserId: 1, Hours: 8, TaskId: 5, SpentAt: harvest.Date(2015, 1, 19, time.UTC)},
+		&harvest.DayEntry{ID: 4, UserId: 1, Hours: 8, TaskId: 7, SpentAt: harvest.Date(2015, 1, 20, time.UTC)},
+		&harvest.DayEntry{ID: 5, UserId: 1, Hours: 8, TaskId: 9, SpentAt: harvest.Date(2015, 1, 21, time.UTC)},
 	}
 
 	if !reflect.DeepEqual(expectedEntries, entries) {
@@ -83,10 +100,10 @@ func TestDayEntryServiceAll(t *testing.T) {
 	}
 
 	expectedEntries = []*harvest.DayEntry{
-		&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
-		&harvest.DayEntry{ID: 3, Hours: 8, TaskId: 5, SpentAt: harvest.Date(2015, 1, 19, time.UTC)},
-		&harvest.DayEntry{ID: 4, Hours: 8, TaskId: 7, SpentAt: harvest.Date(2015, 1, 20, time.UTC)},
-		&harvest.DayEntry{ID: 5, Hours: 8, TaskId: 9, SpentAt: harvest.Date(2015, 1, 21, time.UTC)},
+		&harvest.DayEntry{ID: 1, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
+		&harvest.DayEntry{ID: 3, UserId: 1, Hours: 8, TaskId: 5, SpentAt: harvest.Date(2015, 1, 19, time.UTC)},
+		&harvest.DayEntry{ID: 4, UserId: 1, Hours: 8, TaskId: 7, SpentAt: harvest.Date(2015, 1, 20, time.UTC)},
+		&harvest.DayEntry{ID: 5, UserId: 1, Hours: 8, TaskId: 9, SpentAt: harvest.Date(2015, 1, 21, time.UTC)},
 	}
 
 	if !reflect.DeepEqual(expectedEntries, entries) {
@@ -105,8 +122,8 @@ func TestDayEntryServiceAll(t *testing.T) {
 	}
 
 	expectedEntries = []*harvest.DayEntry{
-		&harvest.DayEntry{ID: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
-		&harvest.DayEntry{ID: 3, Hours: 8, TaskId: 5, SpentAt: harvest.Date(2015, 1, 19, time.UTC)},
+		&harvest.DayEntry{ID: 1, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
+		&harvest.DayEntry{ID: 3, UserId: 1, Hours: 8, TaskId: 5, SpentAt: harvest.Date(2015, 1, 19, time.UTC)},
 	}
 
 	if !reflect.DeepEqual(expectedEntries, entries) {
@@ -125,8 +142,8 @@ func TestDayEntryServiceAll(t *testing.T) {
 	}
 
 	expectedEntries = []*harvest.DayEntry{
-		&harvest.DayEntry{ID: 4, Hours: 8, TaskId: 7, SpentAt: harvest.Date(2015, 1, 20, time.UTC)},
-		&harvest.DayEntry{ID: 5, Hours: 8, TaskId: 9, SpentAt: harvest.Date(2015, 1, 21, time.UTC)},
+		&harvest.DayEntry{ID: 4, UserId: 1, Hours: 8, TaskId: 7, SpentAt: harvest.Date(2015, 1, 20, time.UTC)},
+		&harvest.DayEntry{ID: 5, UserId: 1, Hours: 8, TaskId: 9, SpentAt: harvest.Date(2015, 1, 21, time.UTC)},
 	}
 
 	if !reflect.DeepEqual(expectedEntries, entries) {
@@ -136,12 +153,14 @@ func TestDayEntryServiceAll(t *testing.T) {
 }
 
 func TestDayEntryServicePath(t *testing.T) {
-	service := DayEntryService{}
+	service := DayEntryService{
+		UserId: 1,
+	}
 
 	path := service.Path()
 
-	if path != "entries" {
-		t.Logf("Expected Path to return 'entries', got %q\n", path)
+	if path != "/1/entries" {
+		t.Logf("Expected Path to return '/1/entries', got %q\n", path)
 		t.Fail()
 	}
 }

@@ -7,6 +7,12 @@ import (
 	"github.com/mitch000001/go-harvest/harvest"
 )
 
+func NewUserService(userService UserService) *harvest.UserService {
+	var service *harvest.UserService
+	service = harvest.NewUserService(&userService, &userService)
+	return service
+}
+
 type UserService struct {
 	Users           []*harvest.User
 	DayEntryService DayEntryService
@@ -75,10 +81,4 @@ func (u *UserService) URL() url.URL {
 
 func (u *UserService) CrudEndpoint(path string) harvest.CrudEndpoint {
 	return u.DayEntryService
-}
-
-func NewUserService(userService UserService) *harvest.UserService {
-	var service *harvest.UserService
-	service = harvest.NewUserService(&userService, &userService)
-	return service
 }
