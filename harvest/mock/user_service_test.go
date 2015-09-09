@@ -14,7 +14,7 @@ func TestNewUserService(t *testing.T) {
 		Users: []*harvest.User{
 			&harvest.User{ID: 1, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
 		},
-		DayEntryService: DayEntryEndpoint{
+		DayEntryEndpoint: DayEntryEndpoint{
 			Entries: []*harvest.DayEntry{
 				&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
 			},
