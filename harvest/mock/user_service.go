@@ -7,23 +7,23 @@ import (
 	"github.com/mitch000001/go-harvest/harvest"
 )
 
-func NewUserService(userService UserService) *harvest.UserService {
+func NewUserService(userService UserEndpoint) *harvest.UserService {
 	var service *harvest.UserService
 	service = harvest.NewUserService(&userService, &userService)
 	return service
 }
 
-type UserService struct {
+type UserEndpoint struct {
 	Users           []*harvest.User
-	DayEntryService DayEntryService
+	DayEntryService DayEntryEndpoint
 }
 
-func (u *UserService) All(users interface{}, params url.Values) error {
+func (u *UserEndpoint) All(users interface{}, params url.Values) error {
 	*(users.(*[]*harvest.User)) = u.Users
 	return nil
 }
 
-func (u *UserService) Find(id interface{}, user interface{}, params url.Values) error {
+func (u *UserEndpoint) Find(id interface{}, user interface{}, params url.Values) error {
 	ID := id.(int)
 	for _, u := range u.Users {
 		if ID == u.ID {
@@ -34,13 +34,13 @@ func (u *UserService) Find(id interface{}, user interface{}, params url.Values) 
 	return nil
 }
 
-func (u *UserService) Create(model harvest.CrudModel) error {
+func (u *UserEndpoint) Create(model harvest.CrudModel) error {
 	user := model.(*harvest.User)
 	u.Users = append(u.Users, user)
 	return nil
 }
 
-func (u *UserService) Update(model harvest.CrudModel) error {
+func (u *UserEndpoint) Update(model harvest.CrudModel) error {
 	for _, user := range u.Users {
 		if model.Id() == user.ID {
 			*user = *model.(*harvest.User)
@@ -50,7 +50,7 @@ func (u *UserService) Update(model harvest.CrudModel) error {
 	return nil
 }
 
-func (u *UserService) Delete(model harvest.CrudModel) error {
+func (u *UserEndpoint) Delete(model harvest.CrudModel) error {
 	var users []*harvest.User
 	for _, user := range u.Users {
 		if model.Id() != user.ID {
@@ -61,7 +61,7 @@ func (u *UserService) Delete(model harvest.CrudModel) error {
 	return nil
 }
 
-func (u *UserService) Toggle(model harvest.ActiveTogglerCrudModel) error {
+func (u *UserEndpoint) Toggle(model harvest.ActiveTogglerCrudModel) error {
 	for _, user := range u.Users {
 		if model.Id() == user.ID {
 			user.ToggleActive()
@@ -71,14 +71,14 @@ func (u *UserService) Toggle(model harvest.ActiveTogglerCrudModel) error {
 	return nil
 }
 
-func (u *UserService) Path() string {
+func (u *UserEndpoint) Path() string {
 	return "users"
 }
 
-func (u *UserService) URL() url.URL {
+func (u *UserEndpoint) URL() url.URL {
 	return url.URL{}
 }
 
-func (u *UserService) CrudEndpoint(path string) harvest.CrudEndpoint {
+func (u *UserEndpoint) CrudEndpoint(path string) harvest.CrudEndpoint {
 	return u.DayEntryService
 }

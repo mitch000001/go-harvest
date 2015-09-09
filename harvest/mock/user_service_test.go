@@ -10,11 +10,11 @@ import (
 )
 
 func TestNewUserService(t *testing.T) {
-	mockUserService := UserService{
+	mockUserEndpoint := UserEndpoint{
 		Users: []*harvest.User{
 			&harvest.User{ID: 1, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
 		},
-		DayEntryService: DayEntryService{
+		DayEntryService: DayEntryEndpoint{
 			Entries: []*harvest.DayEntry{
 				&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
 			},
@@ -22,7 +22,7 @@ func TestNewUserService(t *testing.T) {
 		},
 	}
 
-	userService := NewUserService(mockUserService)
+	userService := NewUserService(mockUserEndpoint)
 
 	if userService == nil {
 		t.Logf("Expected userService not to be nil\n")
@@ -46,7 +46,7 @@ func TestNewUserService(t *testing.T) {
 		t.Fail()
 	}
 
-	dayEntryService := userService.DayEntries(mockUserService.Users[0])
+	dayEntryService := userService.DayEntries(mockUserEndpoint.Users[0])
 
 	if dayEntryService == nil {
 		t.Logf("Expected dayEntryService not to be nil\n")
@@ -73,8 +73,8 @@ func TestNewUserService(t *testing.T) {
 	}
 }
 
-func TestUserServiceAll(t *testing.T) {
-	mockUserService := UserService{
+func TestUserEndpointAll(t *testing.T) {
+	mockUserEndpoint := UserEndpoint{
 		Users: []*harvest.User{
 			&harvest.User{ID: 1, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
 			&harvest.User{ID: 2, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
@@ -88,7 +88,7 @@ func TestUserServiceAll(t *testing.T) {
 
 	var actualUsers []*harvest.User
 
-	err := mockUserService.All(&actualUsers, nil)
+	err := mockUserEndpoint.All(&actualUsers, nil)
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
@@ -101,8 +101,8 @@ func TestUserServiceAll(t *testing.T) {
 	}
 }
 
-func TestUserServiceFind(t *testing.T) {
-	mockUserService := UserService{
+func TestUserEndpointFind(t *testing.T) {
+	mockUserEndpoint := UserEndpoint{
 		Users: []*harvest.User{
 			&harvest.User{ID: 1, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
 			&harvest.User{ID: 2, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
@@ -113,7 +113,7 @@ func TestUserServiceFind(t *testing.T) {
 
 	var actualUser harvest.User
 
-	err := mockUserService.Find(1, &actualUser, nil)
+	err := mockUserEndpoint.Find(1, &actualUser, nil)
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
@@ -126,8 +126,8 @@ func TestUserServiceFind(t *testing.T) {
 	}
 }
 
-func TestUserServiceCreate(t *testing.T) {
-	mockUserService := UserService{
+func TestUserEndpointCreate(t *testing.T) {
+	mockUserEndpoint := UserEndpoint{
 		Users: []*harvest.User{
 			&harvest.User{ID: 1, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
 		},
@@ -140,21 +140,21 @@ func TestUserServiceCreate(t *testing.T) {
 
 	userToCreate := &harvest.User{ID: 2, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)}
 
-	err := mockUserService.Create(userToCreate)
+	err := mockUserEndpoint.Create(userToCreate)
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(expectedUsers, mockUserService.Users) {
-		t.Logf("Expected users to equal\n%q\n\tgot\n%q\n", expectedUsers, mockUserService.Users)
+	if !reflect.DeepEqual(expectedUsers, mockUserEndpoint.Users) {
+		t.Logf("Expected users to equal\n%q\n\tgot\n%q\n", expectedUsers, mockUserEndpoint.Users)
 		t.Fail()
 	}
 }
 
-func TestUserServiceUpdate(t *testing.T) {
-	mockUserService := UserService{
+func TestUserEndpointUpdate(t *testing.T) {
+	mockUserEndpoint := UserEndpoint{
 		Users: []*harvest.User{
 			&harvest.User{ID: 1, FirstName: "Max", UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
 			&harvest.User{ID: 2, FirstName: "Charlie", UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
@@ -163,29 +163,29 @@ func TestUserServiceUpdate(t *testing.T) {
 
 	userToUpdate := &harvest.User{ID: 1, FirstName: "Kevin", UpdatedAt: time.Date(2015, 1, 2, 0, 0, 0, 0, time.UTC)}
 
-	err := mockUserService.Update(userToUpdate)
+	err := mockUserEndpoint.Update(userToUpdate)
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
 		t.Fail()
 	}
 
-	if mockUserService.Users[0].FirstName != userToUpdate.FirstName {
-		t.Logf("Expected user1.Firstname to equal %q, got %q\n", userToUpdate.FirstName, mockUserService.Users[0].FirstName)
+	if mockUserEndpoint.Users[0].FirstName != userToUpdate.FirstName {
+		t.Logf("Expected user1.Firstname to equal %q, got %q\n", userToUpdate.FirstName, mockUserEndpoint.Users[0].FirstName)
 		t.Fail()
 	}
-	if mockUserService.Users[0].UpdatedAt.Before(time.Now().In(time.UTC).Add(-2 * time.Second)) {
-		t.Logf("Expected user1.UpdatedAt to be modified, was not: %v\n", mockUserService.Users[0].UpdatedAt)
+	if mockUserEndpoint.Users[0].UpdatedAt.Before(time.Now().In(time.UTC).Add(-2 * time.Second)) {
+		t.Logf("Expected user1.UpdatedAt to be modified, was not: %v\n", mockUserEndpoint.Users[0].UpdatedAt)
 		t.Fail()
 	}
-	if mockUserService.Users[1].FirstName != "Charlie" {
+	if mockUserEndpoint.Users[1].FirstName != "Charlie" {
 		t.Logf("Expected user2.Firstname to equal 'Charlie', got %q\n", userToUpdate.FirstName)
 		t.Fail()
 	}
 }
 
-func TestUserServiceDelete(t *testing.T) {
-	mockUserService := UserService{
+func TestUserEndpointDelete(t *testing.T) {
+	mockUserEndpoint := UserEndpoint{
 		Users: []*harvest.User{
 			&harvest.User{ID: 1, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
 			&harvest.User{ID: 2, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
@@ -198,21 +198,21 @@ func TestUserServiceDelete(t *testing.T) {
 
 	userToDelete := &harvest.User{ID: 2, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)}
 
-	err := mockUserService.Delete(userToDelete)
+	err := mockUserEndpoint.Delete(userToDelete)
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(expectedUsers, mockUserService.Users) {
-		t.Logf("Expected users to equal\n%q\n\tgot\n%q\n", expectedUsers, mockUserService.Users)
+	if !reflect.DeepEqual(expectedUsers, mockUserEndpoint.Users) {
+		t.Logf("Expected users to equal\n%q\n\tgot\n%q\n", expectedUsers, mockUserEndpoint.Users)
 		t.Fail()
 	}
 }
 
-func TestUserServiceToggle(t *testing.T) {
-	mockUserService := UserService{
+func TestUserEndpointToggle(t *testing.T) {
+	mockUserEndpoint := UserEndpoint{
 		Users: []*harvest.User{
 			&harvest.User{ID: 1, IsActive: true, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
 			&harvest.User{ID: 2, IsActive: true, UpdatedAt: time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)},
@@ -221,31 +221,31 @@ func TestUserServiceToggle(t *testing.T) {
 
 	userToToggle := &harvest.User{ID: 1, UpdatedAt: time.Date(2015, 1, 2, 0, 0, 0, 0, time.UTC)}
 
-	err := mockUserService.Toggle(userToToggle)
+	err := mockUserEndpoint.Toggle(userToToggle)
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
 		t.Fail()
 	}
 
-	if mockUserService.Users[0].IsActive != userToToggle.IsActive {
-		t.Logf("Expected user1.IsActive to be %t, got %t\n", userToToggle.IsActive, mockUserService.Users[0].IsActive)
+	if mockUserEndpoint.Users[0].IsActive != userToToggle.IsActive {
+		t.Logf("Expected user1.IsActive to be %t, got %t\n", userToToggle.IsActive, mockUserEndpoint.Users[0].IsActive)
 		t.Fail()
 	}
-	if mockUserService.Users[0].UpdatedAt.Before(time.Now().In(time.UTC).Add(-2 * time.Second)) {
-		t.Logf("Expected user1.UpdatedAt to be modified, was not: %v\n", mockUserService.Users[0].UpdatedAt)
+	if mockUserEndpoint.Users[0].UpdatedAt.Before(time.Now().In(time.UTC).Add(-2 * time.Second)) {
+		t.Logf("Expected user1.UpdatedAt to be modified, was not: %v\n", mockUserEndpoint.Users[0].UpdatedAt)
 		t.Fail()
 	}
-	if mockUserService.Users[1].IsActive != true {
+	if mockUserEndpoint.Users[1].IsActive != true {
 		t.Logf("Expected user2.IsActive to be true, got false\n")
 		t.Fail()
 	}
 }
 
-func TestUserServicePath(t *testing.T) {
-	mockUserService := UserService{}
+func TestUserEndpointPath(t *testing.T) {
+	mockUserEndpoint := UserEndpoint{}
 
-	path := mockUserService.Path()
+	path := mockUserEndpoint.Path()
 
 	if path != "users" {
 		t.Logf("Expected path to return 'users', got %q\n", path)
@@ -253,10 +253,10 @@ func TestUserServicePath(t *testing.T) {
 	}
 }
 
-func TestUserServiceURL(t *testing.T) {
-	mockUserService := UserService{}
+func TestUserEndpointURL(t *testing.T) {
+	mockUserEndpoint := UserEndpoint{}
 
-	actualUrl := mockUserService.URL()
+	actualUrl := mockUserEndpoint.URL()
 
 	expectedUrl := url.URL{}
 
@@ -266,10 +266,10 @@ func TestUserServiceURL(t *testing.T) {
 	}
 }
 
-func TestUserServiceCrudEndpoint(t *testing.T) {
-	mockUserService := UserService{}
+func TestUserEndpointCrudEndpoint(t *testing.T) {
+	mockUserEndpoint := UserEndpoint{}
 
-	crudEndpoint := mockUserService.CrudEndpoint("entries")
+	crudEndpoint := mockUserEndpoint.CrudEndpoint("entries")
 
 	if crudEndpoint == nil {
 		t.Logf("Expected endpoint not to be nil")

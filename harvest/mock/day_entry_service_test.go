@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewDayEntryService(t *testing.T) {
-	service := DayEntryService{
+	endpoint := DayEntryEndpoint{
 		Entries: []*harvest.DayEntry{
 			&harvest.DayEntry{ID: 1, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 2, time.UTC)},
 			&harvest.DayEntry{ID: 1, UserId: 2, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 3, time.UTC)},
@@ -18,7 +18,7 @@ func TestNewDayEntryService(t *testing.T) {
 		UserId: 1,
 	}
 
-	dayEntryService := NewDayEntryService(service)
+	dayEntryService := NewDayEntryService(endpoint)
 
 	if dayEntryService == nil {
 		t.Logf("Expected service not to be nil\n")
@@ -46,8 +46,8 @@ func TestNewDayEntryService(t *testing.T) {
 	}
 }
 
-func TestDayEntryServiceAll(t *testing.T) {
-	service := DayEntryService{
+func TestDayEntryEndpointAll(t *testing.T) {
+	endpoint := DayEntryEndpoint{
 		Entries: []*harvest.DayEntry{
 			&harvest.DayEntry{ID: 1, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
 			&harvest.DayEntry{ID: 2, UserId: 1, Hours: 8, TaskId: 2, SpentAt: harvest.Date(2015, 2, 1, time.UTC)},
@@ -68,7 +68,7 @@ func TestDayEntryServiceAll(t *testing.T) {
 	var params harvest.Params
 	timeframe := harvest.NewTimeframe(2015, 1, 1, 2015, 4, 1, time.UTC)
 
-	err := service.All(&entries, params.ForTimeframe(timeframe).Values())
+	err := endpoint.All(&entries, params.ForTimeframe(timeframe).Values())
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
@@ -92,7 +92,7 @@ func TestDayEntryServiceAll(t *testing.T) {
 	timeframe = harvest.NewTimeframe(2015, 1, 1, 2015, 1, 25, time.UTC)
 	params = harvest.Params{}
 
-	err = service.All(&entries, params.ForTimeframe(timeframe).Values())
+	err = endpoint.All(&entries, params.ForTimeframe(timeframe).Values())
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
@@ -114,7 +114,7 @@ func TestDayEntryServiceAll(t *testing.T) {
 	// proper filtering for billable
 	params = harvest.Params{}
 
-	err = service.All(&entries, params.ForTimeframe(timeframe).Billable(true).Values())
+	err = endpoint.All(&entries, params.ForTimeframe(timeframe).Billable(true).Values())
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
@@ -134,7 +134,7 @@ func TestDayEntryServiceAll(t *testing.T) {
 	// proper filtering for nonbillable
 	params = harvest.Params{}
 
-	err = service.All(&entries, params.ForTimeframe(timeframe).Billable(false).Values())
+	err = endpoint.All(&entries, params.ForTimeframe(timeframe).Billable(false).Values())
 
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
@@ -152,12 +152,12 @@ func TestDayEntryServiceAll(t *testing.T) {
 	}
 }
 
-func TestDayEntryServicePath(t *testing.T) {
-	service := DayEntryService{
+func TestDayEntryEndpointPath(t *testing.T) {
+	endpoint := DayEntryEndpoint{
 		UserId: 1,
 	}
 
-	path := service.Path()
+	path := endpoint.Path()
 
 	if path != "/1/entries" {
 		t.Logf("Expected Path to return '/1/entries', got %q\n", path)
@@ -165,10 +165,10 @@ func TestDayEntryServicePath(t *testing.T) {
 	}
 }
 
-func TestDayEntryServiceURL(t *testing.T) {
-	service := DayEntryService{}
+func TestDayEntryEndpointURL(t *testing.T) {
+	endpoint := DayEntryEndpoint{}
 
-	actualUrl := service.URL()
+	actualUrl := endpoint.URL()
 
 	expectedUrl := url.URL{}
 

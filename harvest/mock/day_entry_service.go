@@ -7,18 +7,18 @@ import (
 	"github.com/mitch000001/go-harvest/harvest"
 )
 
-func NewDayEntryService(service DayEntryService) *harvest.DayEntryService {
-	return harvest.NewDayEntryService(service)
+func NewDayEntryService(endpoint DayEntryEndpoint) *harvest.DayEntryService {
+	return harvest.NewDayEntryService(endpoint)
 }
 
-type DayEntryService struct {
+type DayEntryEndpoint struct {
 	Entries       []*harvest.DayEntry
 	BillableTasks []int
 	UserId        int
 	harvest.CrudEndpoint
 }
 
-func (d DayEntryService) All(data interface{}, params url.Values) error {
+func (d DayEntryEndpoint) All(data interface{}, params url.Values) error {
 	timeframe, err := harvest.TimeframeFromQuery(params)
 	if err != nil {
 		return fmt.Errorf("Error while parsing timeframe: %v", err)
@@ -70,11 +70,11 @@ func (d DayEntryService) All(data interface{}, params url.Values) error {
 	return nil
 }
 
-func (d DayEntryService) Path() string {
+func (d DayEntryEndpoint) Path() string {
 	return fmt.Sprintf("/%d/entries", d.UserId)
 }
 
-func (d DayEntryService) URL() url.URL {
+func (d DayEntryEndpoint) URL() url.URL {
 	return url.URL{}
 }
 
