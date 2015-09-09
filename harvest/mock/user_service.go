@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"fmt"
 	"net/url"
 	"time"
 
@@ -80,5 +81,9 @@ func (u *UserEndpoint) URL() url.URL {
 }
 
 func (u *UserEndpoint) CrudEndpoint(path string) harvest.CrudEndpoint {
-	return u.DayEntryEndpoint
+	var userId int
+	fmt.Sscanf(path, "users/%d/entries", &userId)
+	dayEntryEndpoint := &u.DayEntryEndpoint
+	dayEntryEndpoint.UserId = userId
+	return dayEntryEndpoint
 }

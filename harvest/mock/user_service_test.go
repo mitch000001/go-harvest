@@ -18,7 +18,6 @@ func TestNewUserService(t *testing.T) {
 			Entries: []*harvest.DayEntry{
 				&harvest.DayEntry{ID: 3, UserId: 1, TaskId: 3, Hours: 8, SpentAt: harvest.Date(2015, 1, 1, time.UTC)},
 			},
-			UserId: 1,
 		},
 	}
 
@@ -269,11 +268,20 @@ func TestUserEndpointURL(t *testing.T) {
 func TestUserEndpointCrudEndpoint(t *testing.T) {
 	mockUserEndpoint := UserEndpoint{}
 
-	crudEndpoint := mockUserEndpoint.CrudEndpoint("entries")
+	crudEndpoint := mockUserEndpoint.CrudEndpoint("users/2/entries")
 
 	if crudEndpoint == nil {
 		t.Logf("Expected endpoint not to be nil")
 		t.Fail()
 	}
-	// TODO: what else should we test here?
+
+	if dayEntryEndpoint, ok := crudEndpoint.(*DayEntryEndpoint); ok {
+		if dayEntryEndpoint.UserId != 2 {
+			t.Logf("Expected dayEntryEndpoint UserId to equal 2, was %d\n", dayEntryEndpoint.UserId)
+			t.Fail()
+		}
+	} else {
+		t.Logf("Expected crudEndpoint type to be *DayEntryEndpoint\n")
+		t.Fail()
+	}
 }
