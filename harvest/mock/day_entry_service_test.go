@@ -18,7 +18,7 @@ func TestNewDayEntryService(t *testing.T) {
 		UserId: 1,
 	}
 
-	dayEntryService := NewDayEntryService(endpoint)
+	dayEntryService := NewDayEntryService(&endpoint)
 
 	if dayEntryService == nil {
 		t.Logf("Expected service not to be nil\n")

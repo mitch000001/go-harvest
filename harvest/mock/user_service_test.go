@@ -22,7 +22,7 @@ func TestNewUserService(t *testing.T) {
 		},
 	}
 
-	userService := NewUserService(mockUserEndpoint)
+	userService := NewUserService(&mockUserEndpoint)
 
 	if userService == nil {
 		t.Logf("Expected userService not to be nil\n")

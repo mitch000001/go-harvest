@@ -7,7 +7,7 @@ import (
 	"github.com/mitch000001/go-harvest/harvest"
 )
 
-func NewDayEntryService(endpoint DayEntryEndpoint) *harvest.DayEntryService {
+func NewDayEntryService(endpoint *DayEntryEndpoint) *harvest.DayEntryService {
 	return harvest.NewDayEntryService(endpoint)
 }
 

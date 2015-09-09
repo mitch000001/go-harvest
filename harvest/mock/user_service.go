@@ -7,9 +7,9 @@ import (
 	"github.com/mitch000001/go-harvest/harvest"
 )
 
-func NewUserService(userService UserEndpoint) *harvest.UserService {
+func NewUserService(userService *UserEndpoint) *harvest.UserService {
 	var service *harvest.UserService
-	service = harvest.NewUserService(&userService, &userService)
+	service = harvest.NewUserService(userService, userService)
 	return service
 }
 
