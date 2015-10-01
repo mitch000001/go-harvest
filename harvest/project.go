@@ -29,6 +29,8 @@ type Project struct {
 	ShowBudgetToAll                  bool      `json:"show_budget_to_all,omitempty"`
 	CreatedAt                        time.Time `json:"created_at,omitempty"`
 	UpdatedAt                        time.Time `json:"updated_at,omitempty"`
+	StartsOn                         ShortDate `json:"starts-on,omitempty"`
+	EndsOn                           ShortDate `json:"ends-on,omitempty"`
 	/* These are hints to when the earliest and latest date when a
 	timesheet record or an expense was created for a project. Note
 	that these fields are only updated once every 24 hours, they
